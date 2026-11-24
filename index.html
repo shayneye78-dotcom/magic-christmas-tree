@@ -1,0 +1,1952 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>魔法圣诞树</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Great+Vibes&display=swap" rel="stylesheet">
+<style>
+#scene{z-index:0}#up,#three,#fx{position:fixed;inset:0;width:100%;height:100%;pointer-events:none}#up{z-index:2}#three{z-index:3}#fx{z-index:4}
+
+/*
+VOICE: 温柔、闪亮、像童话夜晚，一步一步引导
+IDEA: 仙女棒在夜空中施魔法——一棵由光点组成的树
+PICTURE: 全屏粒子圣诞树、礼物、圣诞老人与雪橇
+COLOUR and TYPE: 深夜蓝黑底 + 金色魔法光；Great Vibes 手写体 + 系统中文字体
+LAYOUT: 顶部选色转盘、底部引导气泡、右下摄像头小窗、左侧步骤
+*/
+:root{--gold:#ffd77a;--gold2:#ffeab0;--ink:#fff8ec;--glass:rgba(16,18,36,.55);--line:rgba(255,215,122,.35)}
+*{box-sizing:border-box;min-width:0}
+html,body{margin:0;height:100%;overflow:hidden;background:#05070f;color:var(--ink);
+  font:15px/1.5 "PingFang SC","Hiragino Sans GB","Microsoft YaHei","Noto Sans SC",system-ui,sans-serif;user-select:none;-webkit-user-select:none}
+#scene{position:fixed;inset:0;width:100%;height:100%;display:block;touch-action:none}
+button{font:inherit;color:inherit;cursor:pointer}
+.glass{background:var(--glass);border:1px solid var(--line);backdrop-filter:blur(10px);-webkit-backdrop-filter:blur(10px);border-radius:18px}
+
+/* 顶部选择器 */
+#picker{position:fixed;top:14px;left:50%;transform:translateX(-50%);width:min(760px,96vw);padding:8px 10px 10px;transition:opacity .5s,transform .5s;z-index:5}
+#picker.hide{opacity:0;pointer-events:none;transform:translate(-50%,-20px)}
+.ptabs{display:flex;justify-content:center;gap:6px;margin-bottom:6px}
+.ptab{border:1px solid transparent;background:none;padding:3px 14px;border-radius:99px;font-size:13px;opacity:.7}
+.ptab.on{border-color:var(--line);background:rgba(255,215,122,.12);opacity:1;color:var(--gold2)}
+.ptab[hidden]{display:none}
+.prow{display:flex;align-items:center;gap:6px}
+.arrow{flex:none;width:36px;height:36px;border-radius:50%;border:1px solid var(--line);background:rgba(255,255,255,.04);font-size:18px;line-height:1}
+.arrow:hover{background:rgba(255,215,122,.15)}
+.viewport{flex:1;overflow:hidden;position:relative;height:92px;mask-image:linear-gradient(90deg,transparent,#000 14%,#000 86%,transparent);-webkit-mask-image:linear-gradient(90deg,transparent,#000 14%,#000 86%,transparent)}
+#prev.armed,#next.armed{transform:scale(1.25);box-shadow:0 0 18px rgba(255,214,120,.9);background:rgba(255,214,120,.35)}
+.track{position:absolute;left:0;top:0;display:flex;gap:10px;transition:transform .55s cubic-bezier(.2,.9,.25,1.1)}
+.item{width:118px;height:88px;flex:none;border-radius:14px;border:1px solid rgba(255,255,255,.1);background:rgba(255,255,255,.04);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:6px;transition:all .4s;opacity:.55;transform:scale(.88)}
+.item.on{opacity:1;transform:scale(1);border-color:var(--gold);box-shadow:0 0 22px rgba(255,215,122,.35),inset 0 0 18px rgba(255,215,122,.08)}
+.sw{width:46px;height:46px;border-radius:50%;box-shadow:0 0 14px rgba(255,255,255,.18)}
+.sw.tree{border-radius:50% 50% 8px 8px / 80% 80% 8px 8px;clip-path:polygon(50% 0,100% 100%,0 100%);border-radius:0;width:44px;height:46px}
+.iname{font-size:13px;white-space:nowrap}
+
+/* 引导气泡 */
+#hint{position:fixed;left:50%;bottom:18px;transform:translateX(-50%);display:flex;align-items:center;gap:14px;padding:12px 18px 12px 14px;max-width:min(620px,94vw);z-index:5;transition:opacity .4s}
+#hint.hide{opacity:0;pointer-events:none}
+#hintIcon{flex:none;width:54px;height:54px;border-radius:50%;display:grid;place-items:center;font-size:30px;background:radial-gradient(circle,rgba(255,215,122,.25),transparent 70%);position:relative}
+#hintIcon svg{position:absolute;inset:0;transform:rotate(-90deg)}
+#hintTitle{font-size:16px;font-weight:600;color:var(--gold2)}
+#hintSub{font-size:13px;opacity:.82}
+#hintBtn{flex:none;border:1px solid var(--gold);background:rgba(255,215,122,.14);color:var(--gold2);border-radius:99px;padding:8px 14px;font-size:13px;white-space:nowrap}
+#hintBtn:hover{background:rgba(255,215,122,.28)}
+#hintBtn[hidden]{display:none}
+
+/* 步骤 */
+#steps{position:fixed;left:16px;top:50%;transform:translateY(-50%);display:flex;flex-direction:column;gap:6px;z-index:4}
+.step{display:flex;align-items:center;gap:8px;font-size:13px;opacity:.38;transition:all .4s}
+.step b{width:24px;height:24px;border-radius:50%;border:1px solid rgba(255,255,255,.4);display:grid;place-items:center;font-size:12px;font-weight:500}
+.step.on{opacity:1;color:var(--gold2)}.step.on b{border-color:var(--gold);background:rgba(255,215,122,.2);box-shadow:0 0 12px rgba(255,215,122,.5)}
+.step.done{opacity:.7}.step.done b{background:var(--gold);color:#3a2600;border-color:var(--gold)}
+
+/* 礼物托盘 */
+#tray{position:fixed;right:16px;top:50%;transform:translateY(-50%);padding:10px 8px;display:flex;flex-direction:column;gap:6px;z-index:4;transition:opacity .4s}
+#tray.hide{opacity:0;pointer-events:none}
+#tray .tt{font-size:12px;text-align:center;opacity:.75}
+.gbtn{width:64px;height:58px;border-radius:12px;border:1px solid rgba(255,255,255,.1);background:rgba(255,255,255,.03);padding:0;position:relative}
+.gbtn canvas{width:64px;height:58px;display:block}
+.gbtn.next{border-color:var(--gold);box-shadow:0 0 14px rgba(255,215,122,.4)}
+.gbtn.used{opacity:.35}
+.gbtn.used::after{content:"✓";position:absolute;right:4px;top:2px;font-size:12px;color:var(--gold)}
+
+/* 摄像头 */
+#cam{position:fixed;right:16px;bottom:18px;width:208px;height:156px;border-radius:14px;overflow:hidden;z-index:4;border:1px solid var(--line);background:#000;display:none}
+#cam.show{display:block}
+#cam video,#cam canvas{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;transform:scaleX(-1)}
+#cam video{opacity:.55}
+#camTag{position:absolute;left:6px;bottom:6px;right:6px;font-size:12px;padding:3px 8px;border-radius:8px;background:rgba(0,0,0,.55);text-align:center}
+#camTag:empty{display:none}
+
+#topRight{position:fixed;right:16px;top:16px;display:flex;gap:8px;z-index:6}
+.ibtn{width:38px;height:38px;border-radius:50%;border:1px solid var(--line);background:var(--glass);font-size:16px}
+
+/* 开始界面 */
+.overlay{position:fixed;inset:0;display:grid;place-items:center;z-index:10;background:radial-gradient(ellipse at 50% 40%,rgba(30,20,60,.55),rgba(3,4,10,.92));transition:opacity .6s}
+.overlay.hide{opacity:0;pointer-events:none}
+.introBox{text-align:center;padding:30px 26px;max-width:min(640px,92vw)}
+.introBox h1{font:400 clamp(52px,9vw,96px)/1 "Great Vibes",cursive;margin:0;color:var(--gold);text-shadow:0 0 28px rgba(255,200,90,.55)}
+.introBox .cn{font-size:20px;letter-spacing:.2em;margin:6px 0 18px;color:var(--gold2)}
+.introBox p{opacity:.85;margin:0 0 20px}
+.gestures{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:8px;margin:0 0 24px}
+.gestures div{padding:10px 4px;border-radius:12px;background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.08);font-size:12px}
+.gestures span{display:block;font-size:26px;margin-bottom:4px}
+.cta{display:flex;gap:12px;justify-content:center;flex-wrap:wrap}
+.btn{border-radius:99px;padding:12px 26px;font-size:16px;border:1px solid var(--gold);background:linear-gradient(180deg,#ffe29a,#e9b54c);color:#3b2400;font-weight:600;box-shadow:0 0 24px rgba(255,200,90,.35)}
+.btn.ghost{background:transparent;color:var(--gold2);font-weight:500;box-shadow:none}
+.note{font-size:12px;opacity:.6;margin-top:16px}
+#camErr{color:#ffb4a8;font-size:13px;margin-top:12px;min-height:1em}
+
+/* 贺卡 */
+#card .cardWrap{display:flex;gap:24px;align-items:center;padding:20px;max-width:96vw;max-height:96vh}
+#cardImg{max-height:88vh;max-width:min(520px,60vw);border-radius:16px;box-shadow:0 0 50px rgba(255,210,120,.3);display:block}
+.cardSide{width:260px;display:flex;flex-direction:column;gap:12px}
+.cardSide h2{font:400 44px/1 "Great Vibes",cursive;color:var(--gold);margin:0}
+.cardSide label{font-size:13px;opacity:.8;display:flex;flex-direction:column;gap:4px}
+.cardSide input{font:inherit;font-size:16px;padding:9px 12px;border-radius:10px;border:1px solid var(--line);background:rgba(255,255,255,.06);color:var(--ink);user-select:text}
+.cardSide input:focus{outline:2px solid var(--gold);outline-offset:1px}
+.cardSide .btn{padding:10px 18px;font-size:15px}
+@media (max-width:760px){
+  #steps .step span{display:none}
+  #cam{width:132px;height:99px;bottom:auto;top:auto;right:10px;bottom:120px}
+  #picker{top:60px}
+  #tray{right:auto;left:50%;top:auto;bottom:112px;transform:translateX(-50%);flex-direction:row;padding:6px}
+  #tray .tt{display:none}
+  #cam{bottom:170px}
+  .gbtn,.gbtn canvas{width:40px;height:36px}
+  .item{width:92px}
+  .gestures{grid-template-columns:repeat(3,minmax(0,1fr))}
+  #card .cardWrap{flex-direction:column;overflow:auto}
+  #cardImg{max-width:86vw;max-height:58vh}
+  .cardSide{width:min(320px,86vw)}
+}
+@media (prefers-reduced-motion:reduce){.track,.item{transition:none}}
+</style>
+</head>
+<body>
+<canvas id="scene"></canvas><canvas id="up"></canvas><canvas id="three"></canvas><canvas id="fx"></canvas>
+
+<div id="picker" class="glass hide">
+  <div class="ptabs">
+    <button class="ptab on" data-mode="tree">树的颜色</button>
+    <button class="ptab" data-mode="light" hidden>装饰灯颜色</button>
+  </div>
+  <div class="prow">
+    <button class="arrow" id="prev" aria-label="上一个">‹</button>
+    <div class="viewport"><div class="track" id="track"></div></div>
+    <button class="arrow" id="next" aria-label="下一个">›</button>
+  </div>
+</div>
+
+<div id="steps"></div>
+
+<div id="tray" class="glass hide"><div class="tt">礼物</div></div>
+
+<div id="hint" class="glass hide">
+  <div id="hintIcon"><svg viewBox="0 0 54 54"><circle cx="27" cy="27" r="25" fill="none" stroke="rgba(255,215,122,.18)" stroke-width="3"/><circle id="hintRing" cx="27" cy="27" r="25" fill="none" stroke="#ffd77a" stroke-width="3" stroke-linecap="round" stroke-dasharray="157" stroke-dashoffset="157"/></svg><span id="hintEmoji">👋</span></div>
+  <div><div id="hintTitle"></div><div id="hintSub"></div></div>
+  <button id="hintBtn" hidden></button>
+</div>
+
+<div id="cam"><video id="video" playsinline muted></video><canvas id="camCv" width="320" height="240"></canvas><div id="camTag"></div></div>
+
+<div id="topRight">
+  <button class="ibtn" id="musicBtn" title="选择背景音乐">🎵</button><input type="file" id="musicFile" accept="audio/*" style="display:none"><button class="ibtn" id="muteBtn" title="声音">🔊</button>
+  <button class="ibtn" id="resetBtn" title="重新开始">↺</button>
+</div>
+
+<div id="intro" class="overlay">
+  <div class="introBox">
+    <h1>Magic Tree</h1>
+    <div class="cn">挥动仙女棒 · 种一棵会发光的圣诞树</div>
+    <p>用摄像头识别你的手势：选颜色、召唤仙女棒、螺旋种树、放礼物，最后用比心召唤圣诞老人。</p>
+    <div class="gestures">
+      <div><span>☝️</span>食指朝上划一下<br>选颜色</div>
+      <div><span>👇</span>食指朝下<br>召唤仙女棒</div>
+      <div><span>🌀</span>从下往上螺旋<br>种出圣诞树</div>
+      <div><span>🤌</span>聚拢 → 张开<br>放下礼物</div>
+      <div><span>🫶</span>双手比心<br>圣诞老人来啦</div>
+    </div>
+    <div class="cta">
+      <button class="btn" id="startCam">开启摄像头开始</button>
+      <button class="btn ghost" id="startMouse">用鼠标 / 触屏体验</button>
+    </div>
+    <div id="camErr"></div>
+    <div class="note">建议光线明亮，手离摄像头 40–80 厘米，掌心朝向屏幕。摄像头画面只在本机处理，不会上传。</div>
+  </div>
+</div>
+
+<div id="card" class="overlay hide">
+  <div class="cardWrap">
+    <canvas id="cardImg" width="1080" height="1500" role="img" aria-label="你的专属圣诞贺卡"></canvas>
+    <div class="cardSide">
+      <h2>Your Card</h2>
+      <div style="font-size:14px;opacity:.85">这是你亲手种出的圣诞树，圣诞老人已经签好名啦。</div>
+      <label>送给<input id="toName" maxlength="16" value="亲爱的你"></label>
+      <label>来自<input id="fromName" maxlength="16" value="圣诞老人 & 我"></label>
+      <button class="btn" id="saveCard">保存贺卡图片</button>
+      <button class="btn ghost" id="closeCard">继续欣赏</button>
+      <button class="btn ghost" id="againBtn">再种一棵</button>
+    </div>
+  </div>
+</div>
+
+<script>
+{
+// ============ 配置 ============
+const THEMES=[
+ {name:'经典绿色',colors:[['#0d6b3a',3],['#16904c',3],['#2fbf6a',2.4],['#7fe39a',1.2],['#e3ffe8',.5],['#ffd36b',.35]],garland:['#ffd36b','#fff1c1'],star:'#ffd75e',trunk:'#8a5530',glow:'#2fbf6a',sky:['#040b14','#0a2224']},
+ {name:'粉色',colors:[['#ff5d8f',2],['#ff8fab',3],['#ffb3c6',3],['#ffd6e3',2],['#fff3f8',1],['#e8a0b4',1]],garland:['#ffffff','#ffd1dc'],star:'#fff1f6',trunk:'#b07a7a',glow:'#ff8fab',sky:['#12060f','#2a1028']},
+ {name:'美拉德秋冬色',colors:[['#7a4421',2],['#a0612f',3],['#c58243',3],['#dcaa6e',2],['#efd7b0',1],['#8e3a2c',1.2],['#5e6b3a',.6]],garland:['#f3d9a4','#ffe7bf'],star:'#f6c86b',trunk:'#5a3519',glow:'#c58243',sky:['#0e0805','#26150b']},
+ {name:'蓝色',colors:[['#1146a8',2],['#1e6fd9',3],['#4ea8de',3],['#90e0ef',2],['#e4fbff',1],['#7b8fd6',.8]],garland:['#e6f7ff','#bfe9ff'],star:'#eaf7ff',trunk:'#4a5a78',glow:'#4ea8de',sky:['#030817','#0a1a38']},
+ {name:'马卡龙彩色',colors:[['#ffadad',1],['#ffd6a5',1],['#fdffb6',1],['#caffbf',1],['#9bf6ff',1],['#a0c4ff',1],['#bdb2ff',1],['#ffc6ff',1]],garland:['#ffffff','#fff5d6'],star:'#fff6c8',trunk:'#c9a27e',glow:'#bdb2ff',sky:['#0c0a1c','#1d1636']},
+];
+const LIGHTS=[
+ {name:'暖金',colors:['#ffd27a','#ffb347','#fff0b3']},
+ {name:'缤纷彩灯',colors:['#ff4d4d','#ffd93d','#4dd96b','#4dabff','#ff6ec7']},
+ {name:'冰雪白',colors:['#ffffff','#d6f1ff','#a8dcff']},
+ {name:'红白糖果',colors:['#ff2e4d','#ffffff','#ff2e4d']},
+ {name:'梦幻紫粉',colors:['#c77dff','#ff70a6','#ffd6ff']},
+];
+// 礼物：每组若干盒子 [dx, w, h, 盒色, 丝带色, 叠放在第几个盒子上(-1地面)]
+// 每个树主题一套礼物配色：a 主色 / b 浅色 / c 点缀色 / m 金属色 / r 浅丝带
+const GIFT_PAL=[
+ {a:'#c8102e',b:'#f6efe2',c:'#1e7a46',m:'#d8b15a',r:'#fff6df'},   // 经典绿色：红 / 奶白 / 墨绿 / 金
+ {a:'#ff6f9c',b:'#fff3f7',c:'#c6a3e8',m:'#e8bfa2',r:'#ffffff'},   // 粉色：玫粉 / 白 / 淡紫 / 玫瑰金
+ {a:'#8e3a2c',b:'#f1dfc0',c:'#5e6b3a',m:'#c9965a',r:'#fff2da'},   // 美拉德：酒红 / 奶油 / 橄榄绿 / 焦糖
+ {a:'#1f3f8f',b:'#ffffff',c:'#8fd6ee',m:'#c5ccd8',r:'#ffffff'},   // 蓝色：藏青 / 白 / 冰蓝 / 银
+ {a:'#ff9fa8',b:'#c7f5be',c:'#a7c7ff',m:'#fff1a8',r:'#ffffff'},   // 马卡龙：粉 / 薄荷 / 天蓝 / 奶黄
+];
+// 礼物组合：[形状, 横向偏移, 前后(正=靠前), 宽, 高, 颜色, 丝带色, 叠在第几个上(-1=地面)]
+const GIFTS=[
+ {name:'叠叠高',items:[['box',-.02,0,.38,.30,'a','m',-1],['box',.04,0,.27,.22,'b','a',0],['box',-.01,0,.17,.15,'c','m',1]]},
+ {name:'礼帽盒',items:[['cyl',-.07,0,.36,.30,'m','a',-1],['ball',.23,.07,.13,.13,'a','m',-1],['ball',.32,-.03,.09,.09,'c','m',-1]]},
+ {name:'宽扁盒',items:[['box',0,0,.5,.17,'c','r',-1],['box',.07,0,.22,.19,'a','m',0]]},
+ {name:'三只小礼物',items:[['box',-.03,-.08,.17,.15,'c','m',-1],['box',-.17,.04,.21,.19,'a','r',-1],['box',.11,.06,.19,.24,'b','a',-1]]},
+ {name:'高礼盒',items:[['box',-.06,0,.23,.44,'b','a',-1],['ball',.17,.07,.12,.12,'m','a',-1]]},
+];
+const STEPS=['选颜色','召唤仙女棒','螺旋种树','挂灯 · 放礼物','双手比心'];
+
+// ============ 基础 ============
+const cv=document.getElementById('scene');let ctx=cv.getContext('2d');
+let W=0,H=0,DPR=1,F=1,CX=0,CY=0;const CAMZ=6;
+const bg=document.createElement('canvas'),bgx=bg.getContext('2d');
+const $=id=>document.getElementById(id);
+const upc=$('up'),fxc=$('fx');window.__up=upc.getContext('2d');window.__fx=fxc.getContext('2d');
+const rand=(a,b)=>a+Math.random()*(b-a);
+const clamp=(v,a,b)=>v<a?a:v>b?b:v;
+const lerp=(a,b,t)=>a+(b-a)*t;
+const ease=t=>t<.5?4*t*t*t:1-Math.pow(-2*t+2,3)/2;
+const easeOut=t=>1-Math.pow(1-t,3);
+const hexRgb=h=>{if(h.length===4)h='#'+h[1]+h[1]+h[2]+h[2]+h[3]+h[3];return[parseInt(h.slice(1,3),16),parseInt(h.slice(3,5),16),parseInt(h.slice(5,7),16)]};
+function pickWeighted(list){let s=0;for(const c of list)s+=c[1];let r=Math.random()*s;for(let i=0;i<list.length;i++){r-=list[i][1];if(r<=0)return i}return list.length-1}
+
+const spriteCache={};
+function sprite(color,kind){
+  const key=color+kind;if(spriteCache[key])return spriteCache[key];
+  const s=kind==='glow'?64:32,c=document.createElement('canvas');c.width=c.height=s;const g=c.getContext('2d');
+  const [r,gg,b]=hexRgb(color),gr=g.createRadialGradient(s/2,s/2,0,s/2,s/2,s/2);
+  if(kind==='glow'){gr.addColorStop(0,'rgba(255,255,255,1)');gr.addColorStop(.14,`rgba(${r},${gg},${b},1)`);gr.addColorStop(.4,`rgba(${r},${gg},${b},.35)`);gr.addColorStop(1,`rgba(${r},${gg},${b},0)`)}
+  else{ // 清晰的实心粒子：硬边核心 + 很淡的光晕 + 一点高光
+    gr.addColorStop(0,`rgba(${r},${gg},${b},.22)`);gr.addColorStop(.55,`rgba(${r},${gg},${b},.08)`);gr.addColorStop(1,`rgba(${r},${gg},${b},0)`);
+    g.fillStyle=gr;g.fillRect(0,0,s,s);
+    const cg=g.createRadialGradient(s*.42,s*.4,0,s/2,s/2,s*.3);cg.addColorStop(0,`rgb(${Math.min(255,r+90)},${Math.min(255,gg+90)},${Math.min(255,b+90)})`);cg.addColorStop(.45,`rgb(${r},${gg},${b})`);cg.addColorStop(1,`rgb(${Math.round(r*.8)},${Math.round(gg*.8)},${Math.round(b*.8)})`);
+    g.fillStyle=cg;g.beginPath();g.arc(s/2,s/2,s*.3,0,7);g.fill();return spriteCache[key]=c}
+  g.fillStyle=gr;g.fillRect(0,0,s,s);return spriteCache[key]=c;
+}
+
+function resize(){
+  DPR=Math.min(2,window.devicePixelRatio||1);W=innerWidth;H=innerHeight;
+  cv.width=W*DPR;cv.height=H*DPR;ctx.setTransform(DPR,0,0,DPR,0,0);for(const c of [upc,fxc]){c.width=W*DPR;c.height=H*DPR}
+  F=Math.min(H*1.1,W*1.5);CX=W/2;CY=H*0.55;
+  drawBg();layoutText();buildSpiral();
+}
+function drawBg(){
+  bg.width=W*DPR;bg.height=H*DPR;bgx.setTransform(DPR,0,0,DPR,0,0);
+  const th=THEMES[S.theme],g=bgx.createLinearGradient(0,0,0,H);
+  g.addColorStop(0,th.sky[0]);g.addColorStop(.7,th.sky[1]);g.addColorStop(1,'#020308');
+  bgx.fillStyle=g;bgx.fillRect(0,0,W,H);
+  const n=Math.floor(W*H/5000);
+  for(let i=0;i<n;i++){const x=Math.random()*W,y=Math.random()*H*.75,r=Math.random()*1.2+.2;bgx.fillStyle=`rgba(255,255,255,${Math.random()*.6+.1})`;bgx.beginPath();bgx.arc(x,y,r,0,7);bgx.fill()}
+  const gy=CY+1.27*F/CAMZ, hz=bgx.createRadialGradient(CX,gy,0,CX,gy,W*.7);
+  hz.addColorStop(0,'rgba(200,220,255,.10)');hz.addColorStop(1,'rgba(200,220,255,0)');bgx.fillStyle=hz;bgx.fillRect(0,0,W,H);
+}
+function proj(x,y,z){const s=F/(CAMZ-z);return{x:CX+x*s,y:CY-y*s,s}}
+
+// ============ 状态 ============
+const S={stage:'intro',theme:0,prevTheme:0,themeT:-9,light:0,prevLight:0,lightT:-9,pickMode:'tree',
+  rot:0,time:0,grow:0,holdPoint:0,circleSum:0,lastA:null,circleIdle:0,trail:[],
+  gifts:[],holding:null,hoverSlot:-1,nextStyle:0,usedStyles:[false,false,false,false,false],lostT:0,
+  heartHold:0,spiral:0,autoSpiral:false,textMorph:0,wand:{mode:'none',x:0,y:0,ang:.8,alpha:0},santa:null,text:null,cardShown:false,camOn:false,muted:false};
+
+// ============ 树粒子 ============
+const TOP=1.28,BASE=-1.02,TH=TOP-BASE,TIERS=6;
+function drawOccluder(){const a=window.__occ||0;if(a<=0.01||S.grow<1)return;ctx.save();ctx.globalAlpha=a;ctx.beginPath();
+  for(let i=0;i<=48;i++){const h=i/48,r=radiusAt(h)*.93,p=proj(r,BASE+h*TH,0);i?ctx.lineTo(p.x,p.y):ctx.moveTo(p.x,p.y)}
+  for(let i=48;i>=0;i--){const h=i/48,r=radiusAt(h)*.93,p=proj(-r,BASE+h*TH,0);ctx.lineTo(p.x,p.y)}
+  ctx.closePath();const c0=THEMES[S.theme].colors[0][0],bp=proj(0,BASE+TH*.3,0),g=ctx.createRadialGradient(bp.x,bp.y,0,bp.x,bp.y,bp.s*1.6);
+  g.addColorStop(0,shadeHex(c0,-.45));g.addColorStop(1,shadeHex(c0,-.7));ctx.fillStyle=g;ctx.fill();ctx.restore()}
+function radiusAt(h){const env=1.08*Math.pow(1-h,1.02);const f=(h*TIERS)%1;return env*(1-.26*f)+.02}
+const body=[],garland=[],lights=[],star=[],trunk=[],ground=[];
+function buildTree(){
+  body.length=garland.length=lights.length=star.length=trunk.length=ground.length=0;
+  for(let i=0;i<4600;i++){
+    const h=1-Math.sqrt(Math.random())*.995;const R=radiusAt(h)*(.55+.45*Math.sqrt(Math.random()));
+    body.push({h,r:R,a:Math.random()*Math.PI*2,y:BASE+h*TH+rand(-.03,.03),sz:rand(.014,.028),c:[],ph:Math.random()*7,rnd:Math.random()});
+  }
+  for(const p of body)p.c=THEMES.map(t=>pickWeighted(t.colors));
+  for(let k=0;k<2;k++)for(let i=0;i<300;i++){const u=i/300,h=u*.93;garland.push({h,r:radiusAt(h)*1.03,a:u*Math.PI*2*5.5+k*Math.PI,y:BASE+h*TH,sz:rand(.012,.02),ph:Math.random()*7,rnd:Math.random(),k:i%2})}
+  for(let s=0;s<3;s++)for(let i=0;i<55;i++){const u=(i+Math.random()*.5)/55,h=u*.9+.02;lights.push({h,r:radiusAt(h)*1.06,a:u*Math.PI*2*4+s*2.094,y:BASE+h*TH+rand(-.04,.04),ci:(i+s)%5,ph:Math.random()*7,sp:rand(1.5,3.5),rnd:Math.random()})}
+  for(let i=0;i<160;i++){const t=i/160*Math.PI*2,k=Math.floor(i/16),f=(i%16)/16;
+    const a0=-Math.PI/2+k*Math.PI*2/10,a1=-Math.PI/2+(k+1)*Math.PI*2/10,r0=k%2?.075:.18,r1=k%2?.18:.075;
+    const x0=Math.cos(a0)*r0,y0=Math.sin(a0)*r0,x1=Math.cos(a1)*r1,y1=Math.sin(a1)*r1;
+    star.push({x:lerp(x0,x1,f),y:-lerp(y0,y1,f),ph:Math.random()*7})}
+  for(let i=0;i<70;i++)star.push({x:rand(-.07,.07),y:rand(-.07,.07),ph:Math.random()*7,fill:1});
+  for(let i=0;i<90;i++){const h=Math.random();trunk.push({r:Math.sqrt(Math.random())*.11,a:Math.random()*7,y:-1.27+h*.3,sz:rand(.02,.035)})}
+  for(let i=0;i<420;i++){const r=Math.sqrt(Math.random())*2.3;ground.push({r,a:Math.random()*7,y:-1.28+rand(-.01,.01),sz:rand(.008,.02),ph:Math.random()*7})}
+}
+
+// 生长：粒子从底部魔法圈螺旋上升
+function growPos(p,out){
+  const delay=p.h*.86+p.rnd*.06,k=clamp((S.grow-delay)/.18,0,1);
+  if(k<=0)return false;const e=easeOut(k);
+  out.r=lerp(p.r+.5,p.r,e);out.y=lerp(p.y-.22,p.y,e);out.a=p.a+(1-e)*2.4;out.k=k;return true;
+}
+const gf=new Uint8Array(6000);
+// 螺旋引导路径（从树底往上绕）
+const SPN=260;let spiralPts=[];
+function buildSpiral(){spiralPts=[];for(let k=0;k<=SPN;k++){const u=k/SPN,h=u*.97,th=u*Math.PI*2*3.2+.6,r=1.08*Math.pow(1-h,1.02)*1.22+.12,x=Math.sin(th)*r,z=Math.cos(th)*r,q=proj(x,BASE+h*TH,z);spiralPts.push({x:q.x,y:q.y,z})}}
+const zs=new Float32Array(6000),idx=new Uint16Array(6000),px=new Float32Array(6000),py=new Float32Array(6000),ps=new Float32Array(6000);
+const tmp={r:0,y:0,a:0,k:1};
+
+function drawTree(){
+  const showGhost=['intro','select','spiral'].includes(S.stage),ghost=S.grow<=0;if(ghost&&!showGhost)return;
+  const ghostA=S.stage==='spiral'?.14:.2,full=S.grow>=1.2;
+  const t=S.time,rot=S.rot,th=THEMES[S.theme],pth=THEMES[S.prevTheme],wave=(t-S.themeT)*1.3;
+  // 地面雪粒
+  const gk=ghost?.5:clamp(.5+S.grow,0,1);
+  ctx.globalCompositeOperation='lighter';
+  for(const g of ground){const a=g.a+rot*.3,x=Math.cos(a)*g.r,z=Math.sin(a)*g.r,p=proj(x,g.y,z);ctx.globalAlpha=gk*(.25+.2*Math.sin(t*2+g.ph));const s=g.sz*p.s*2.2;ctx.drawImage(sprite('#cfe6ff','dot'),p.x-s/2,p.y-s/2,s,s)}
+  // 底部光晕
+  const bp=proj(0,-1.27,0),rg=ctx.createRadialGradient(bp.x,bp.y,0,bp.x,bp.y,bp.s*1.6);
+  const [r0,g0,b0]=hexRgb(th.glow);rg.addColorStop(0,`rgba(${r0},${g0},${b0},${.22*gk})`);rg.addColorStop(1,`rgba(${r0},${g0},${b0},0)`);
+  ctx.globalAlpha=1;ctx.fillStyle=rg;ctx.save();ctx.translate(bp.x,bp.y);ctx.scale(1,.32);ctx.beginPath();ctx.arc(0,0,bp.s*1.6,0,7);ctx.restore();ctx.fill();
+  ctx.globalCompositeOperation='source-over';
+  // 树干
+  for(const p of trunk){if(S.grow<.05||ghost)break;const a=p.a+rot,pp=proj(Math.cos(a)*p.r,p.y,Math.sin(a)*p.r);ctx.globalAlpha=.9;const s=p.sz*pp.s*2;ctx.drawImage(sprite(th.trunk,'dot'),pp.x-s/2,pp.y-s/2,s,s)}
+  // 主体 + 彩带 深度排序
+  let n=0;const all=body.length+garland.length;
+  for(let i=0;i<all;i++){
+    const p=i<body.length?body[i]:garland[i-body.length];
+    gf[i]=0;
+    if(full){tmp.r=p.r;tmp.y=p.y;tmp.a=p.a;tmp.k=1}
+    else if(S.grow>0&&growPos(p,tmp)){}
+    else if(showGhost&&i<body.length&&i%3===0){tmp.r=p.r;tmp.y=p.y;tmp.a=p.a;tmp.k=1;gf[i]=1}
+    else continue;
+    const a=tmp.a+rot,x=Math.cos(a)*tmp.r,z=Math.sin(a)*tmp.r,q=proj(x,tmp.y,z);
+    zs[i]=z;px[i]=q.x;py[i]=q.y;ps[i]=q.s*tmp.k;idx[n++]=i;
+  }
+  const sub=idx.subarray(0,n);sub.sort((a,b)=>zs[a]-zs[b]);
+  for(let j=0;j<n;j++){
+    const i=sub[j],z=zs[i],depth=clamp((z+1.1)/2.2,0,1);
+    if(i<body.length){
+      const p=body[i],tw=.88+.12*Math.sin(t*2.2+p.ph),useNew=wave>p.h+p.rnd*.12;
+      const T=useNew?th:pth,col=T.colors[p.c[useNew?S.theme:S.prevTheme]][0];
+      ctx.globalAlpha=(.55+.45*depth)*tw*(gf[i]?ghostA:1);const s=p.sz*ps[i]*2.6;ctx.drawImage(sprite(col,'dot'),px[i]-s/2,py[i]-s/2,s,s);
+      if(!useNew&&wave>p.h-.08&&wave<p.h+.2){ctx.globalCompositeOperation='lighter';ctx.globalAlpha=.6;const s2=s*3;ctx.drawImage(sprite('#ffffff','glow'),px[i]-s2/2,py[i]-s2/2,s2,s2);ctx.globalCompositeOperation='source-over'}
+    }else{
+      const p=garland[i-body.length],col=th.garland[p.k],tw=.6+.4*Math.sin(t*4-p.h*20+p.ph*.3);
+      ctx.globalCompositeOperation='lighter';ctx.globalAlpha=(.25+.75*depth)*tw;const s=p.sz*ps[i]*2.4;ctx.drawImage(sprite(col,'glow'),px[i]-s/2,py[i]-s/2,s,s);ctx.globalCompositeOperation='source-over';
+    }
+  }
+  if(ghost){ctx.globalCompositeOperation='source-over';ctx.globalAlpha=1;return}
+  // 装饰灯
+  ctx.globalCompositeOperation='lighter';
+  const L=LIGHTS[S.light],PL=LIGHTS[S.prevLight],lw=(t-S.lightT)*1.6;
+  for(const p of lights){
+    let r=p.r,y=p.y,a=p.a,k=1;
+    if(!full){if(!growPos(p,tmp))continue;r=tmp.r;y=tmp.y;a=tmp.a;k=tmp.k}
+    const aa=a+rot,x=Math.cos(aa)*r,z=Math.sin(aa)*r,q=proj(x,y,z),depth=clamp((z+1.1)/2.2,0,1);
+    const useNew=lw>p.h+p.rnd*.1,LL=useNew?L:PL,col=LL.colors[p.ci%LL.colors.length];
+    const tw=.55+.45*Math.sin(t*p.sp+p.ph);ctx.globalAlpha=(z<0?.28:.95)*tw*k;
+    const s=q.s*(.075+.03*tw)*(useNew?1:1)*(lw>p.h&&lw<p.h+.25?1.8:1);ctx.drawImage(sprite(col,'glow'),q.x-s/2,q.y-s/2,s,s);
+  }
+  // 星星
+  const sk=clamp((S.grow-1)/.15,0,1);
+  if(sk>0){
+    const sp=proj(0,TOP+.13,0),sc=sp.s*easeOut(sk)*(1+.06*Math.sin(t*3));
+    ctx.globalAlpha=.35*sk;const hs=sc*1.1;ctx.drawImage(sprite(th.star,'glow'),sp.x-hs/2,sp.y-hs/2,hs,hs);
+    ctx.save();ctx.translate(sp.x,sp.y);ctx.rotate(t*.3);ctx.globalAlpha=.18*sk;ctx.strokeStyle=th.star;ctx.lineWidth=1.2;
+    for(let i=0;i<8;i++){ctx.rotate(Math.PI/4);ctx.beginPath();ctx.moveTo(0,sc*.12);ctx.lineTo(0,sc*(i%2?.35:.5));ctx.stroke()}ctx.restore();
+    for(const p of star){const s=sc*(p.fill?.05:.035)*(.8+.3*Math.sin(t*5+p.ph));ctx.globalAlpha=sk*.95;ctx.drawImage(sprite(th.star,'glow'),sp.x+p.x*sc-s/2,sp.y+p.y*sc-s/2,s,s)}
+  }
+  ctx.globalCompositeOperation='source-over';ctx.globalAlpha=1;
+}
+
+// ============ 闪光粒子 ============
+const sparks=[];
+function spark(x,y,col,n=1,spd=1,size=1){for(let i=0;i<n;i++){const a=Math.random()*7,v=rand(.2,1.6)*spd*40;sparks.push({x,y,vx:Math.cos(a)*v,vy:Math.sin(a)*v-10*spd,life:0,max:rand(.5,1.2),col,sz:rand(4,11)*size})}}
+function drawSparks(dt){
+  ctx.globalCompositeOperation='lighter';
+  for(let i=sparks.length-1;i>=0;i--){const p=sparks[i];p.life+=dt;if(p.life>p.max){sparks.splice(i,1);continue}
+    p.x+=p.vx*dt;p.y+=p.vy*dt;p.vy+=30*dt;p.vx*=.98;const k=1-p.life/p.max;ctx.globalAlpha=k;const s=p.sz*(.5+k*.5);ctx.drawImage(sprite(p.col,'glow'),p.x-s/2,p.y-s/2,s,s)}
+  ctx.globalCompositeOperation='source-over';ctx.globalAlpha=1;
+}
+const snow=[];for(let i=0;i<160;i++)snow.push({x:Math.random(),y:Math.random(),r:rand(.6,2.4),v:rand(.02,.06),d:Math.random()*7});
+function drawSnow(dt){ctx.fillStyle='#fff';for(const f of snow){f.y+=f.v*dt;f.x+=Math.sin(S.time*.6+f.d)*.0004;if(f.y>1.02){f.y=-.02;f.x=Math.random()}ctx.globalAlpha=.25+f.r*.18;ctx.beginPath();ctx.arc(f.x*W,f.y*H,f.r,0,7);ctx.fill()}ctx.globalAlpha=1}
+
+// ============ 仙女棒 ============
+function drawWand(tx,ty,ang,sc,alpha){
+  if(alpha<=0)return;const L=120*sc;ctx.save();ctx.globalAlpha=alpha;ctx.translate(tx,ty);ctx.rotate(ang);
+  const g=ctx.createLinearGradient(0,0,L,0);g.addColorStop(0,'#fff6d6');g.addColorStop(.6,'#e9c46a');g.addColorStop(1,'#a8742a');
+  ctx.strokeStyle=g;ctx.lineWidth=5*sc;ctx.lineCap='round';ctx.beginPath();ctx.moveTo(10*sc,0);ctx.lineTo(L,0);ctx.stroke();
+  ctx.strokeStyle='#7a4f1d';ctx.lineWidth=7*sc;ctx.beginPath();ctx.moveTo(L*.72,0);ctx.lineTo(L,0);ctx.stroke();
+  ctx.restore();
+  ctx.save();ctx.globalAlpha=alpha;ctx.globalCompositeOperation='lighter';
+  const gs=70*sc*(1+.12*Math.sin(S.time*8));ctx.drawImage(sprite('#ffd77a','glow'),tx-gs/2,ty-gs/2,gs,gs);ctx.restore();
+  ctx.save();ctx.globalAlpha=alpha;ctx.translate(tx,ty);ctx.rotate(S.time*1.5);ctx.fillStyle='#fff3c4';ctx.shadowColor='#ffd77a';ctx.shadowBlur=14*sc;
+  ctx.beginPath();for(let i=0;i<10;i++){const r=i%2?6*sc:15*sc,a=i*Math.PI/5-Math.PI/2;ctx.lineTo(Math.cos(a)*r,Math.sin(a)*r)}ctx.closePath();ctx.fill();ctx.restore();
+}
+
+// ============ 礼物 ============
+const SLOTS=[{x:-1.2,z:.36,s:.9},{x:-.72,z:.96,s:1.02},{x:-1.3,z:1.12,s:1.1},{x:.8,z:1.0,s:1.06},{x:1.28,z:.42,s:.93}];   // 左边三堆（后 / 中 / 前外）+ 右边两堆（前 / 后），中间留出树干
+function slotWorld(i){const o=SLOTS[i];return{x:o.x,y:-1.28,z:o.z}}
+const hex=(r,g,b)=>'#'+[r,g,b].map(v=>Math.round(clamp(v,0,255)).toString(16).padStart(2,'0')).join('');
+function shadeHex(h,k){const [r,g,b]=hexRgb(h),f=v=>k>0?v+(255-v)*k:v*(1+k);return hex(f(r),f(g),f(b))}
+function giftParticles(style,theme){
+  const G=GIFTS[style],PAL=GIFT_PAL[theme]||GIFT_PAL[0],pts=[],st=.022,J=st*.3;
+  const add=(x,y,c,sz,gl)=>pts.push({x:x+rand(-J,J),y:y+rand(-J,J),c,sz,gl,ph:Math.random()*7});
+  const bow=(cx,cy,w,rib)=>{const rT=shadeHex(rib,.25),rD=shadeHex(rib,-.2),L=Math.max(.06,w*.17);   // 蝴蝶结：两个圈 + 两条飘带 + 结
+    for(const sd of[-1,1]){for(let i=0;i<30;i++){const a=i/30*Math.PI*2,ex=Math.cos(a)*L,ey=Math.sin(a)*L*.55,ro=sd*-.55;add(cx+sd*L+ex*Math.cos(ro)-ey*Math.sin(ro),cy-L*.45+ex*Math.sin(ro)+ey*Math.cos(ro),i%3?rT:rib,st*.9,1)}
+      for(let i=0;i<10;i++)add(cx+sd*(L*.15+i*L*.07),cy+i*L*.09,rD,st*.85,1)}
+    for(let i=0;i<14;i++){const a=Math.random()*7,r=Math.random()*L*.28;add(cx+Math.cos(a)*r,cy-L*.15+Math.sin(a)*r,rib,st*.9,1)}};
+  const box=(bx,by,w,h,col,rib,hasBow)=>{
+    const d=w*.32,dx=d*.62,dy=d*.45,rw=w*.15,cS=shadeHex(col,-.42),cT=shadeHex(col,.3),rS=shadeHex(rib,-.25),rT=shadeHex(rib,.2),ec=shadeHex(col,.6);
+    const ns=Math.max(2,Math.round(dx/st)),nh=Math.max(2,Math.round(h/st)),nw=Math.max(2,Math.round(w/st)),nd=Math.max(2,Math.round(dy/st));
+    for(let i=0;i<=ns;i++)for(let j=0;j<=nh;j++){const sx=i/ns;add(bx+w/2+dx*sx,by-h*j/nh-dy*sx,Math.abs(sx-.5)*dx<rw*.35?rS:cS,st*1.05,0)}         // 侧面：竖着的丝带
+    for(let i=0;i<=nw;i++)for(let j=0;j<=nh;j++){const x=bx-w/2+w*i/nw;add(x,by-h*j/nh,Math.abs(x-bx)<rw/2?rib:col,st*1.05,0)}                 // 正面：竖着的丝带
+    for(let i=0;i<=nw;i++)for(let j=0;j<=nd;j++){const sx=i/nw,q=j/nd;add(bx-w/2+w*sx+dx*q,by-h-dy*q,(Math.abs(sx-.5)*w<rw/2||Math.abs(q-.5)<.22)?rT:cT,st*1.05,0)}   // 盒盖：十字丝带
+    const E=[[bx-w/2,by,bx+w/2,by],[bx-w/2,by-h,bx+w/2,by-h],[bx-w/2,by,bx-w/2,by-h],[bx+w/2,by,bx+w/2,by-h],[bx+w/2,by,bx+w/2+dx,by-dy],[bx+w/2+dx,by-dy,bx+w/2+dx,by-h-dy],[bx-w/2,by-h,bx-w/2+dx,by-h-dy],[bx-w/2+dx,by-h-dy,bx+w/2+dx,by-h-dy],[bx+w/2,by-h,bx+w/2+dx,by-h-dy]];
+    for(const [x0,y0,x1,y1] of E){const n=Math.max(2,Math.round(Math.hypot(x1-x0,y1-y0)/(st*.9)));for(let i=0;i<=n;i++)add(lerp(x0,x1,i/n),lerp(y0,y1,i/n),ec,st*.65,1)}
+    if(hasBow)bow(bx+dx/2,by-h-dy/2,w,rib);
+    return by-h-dy*.5;
+  };
+  const cyl=(bx,by,w,h,col,rib,hasBow)=>{   // 礼帽盒：圆筒 + 椭圆盒盖
+    const rx=w/2,ry=w*.17,rw=w*.13,nt=Math.max(6,Math.round(Math.PI*rx/st)),nh=Math.max(2,Math.round(h/st)),rT=shadeHex(rib,.2);
+    for(let i=0;i<=nt;i++){const th=-Math.PI/2+Math.PI*i/nt,x=bx+Math.sin(th)*rx,sh=-.42+.62*Math.max(0,Math.cos(th+.55)),band=Math.abs(Math.sin(th)*rx)<rw/2;
+      for(let j=0;j<=nh;j++){const f=j/nh,y=by-ry+ry*Math.cos(th)-h*f,hb=Math.abs(f-.45)*h<rw*.4;add(x,y,band||hb?shadeHex(rib,sh*.5):shadeHex(col,sh),st*1.05,0)}}
+    const cy=by-ry-h;
+    for(let i=-rx;i<=rx;i+=st)for(let j=-ry;j<=ry;j+=st*.7){if((i/rx)**2+(j/ry)**2>1)continue;add(bx+i,cy+j,(Math.abs(i)<rw/2||Math.abs(j)<rw*.25)?rT:shadeHex(col,.32),st*1.05,0)}
+    for(let i=0;i<48;i++){const a=i/48*Math.PI*2;add(bx+Math.cos(a)*rx,cy+Math.sin(a)*ry,shadeHex(col,.6),st*.65,1)}
+    if(hasBow)bow(bx,cy,w,rib);
+    return cy;
+  };
+  const ball=(bx,by,w,col,cap)=>{   // 圣诞球：有明暗和高光，顶上一个金属小帽
+    const r=w/2,cx=bx,cy=by-r;
+    for(let i=-r;i<=r;i+=st*.85)for(let j=-r;j<=r;j+=st*.85){const q=(i*i+j*j)/(r*r);if(q>1)continue;const nz=Math.sqrt(1-q),k=(-.45*i/r-.55*j/r+.7*nz);add(cx+i,cy+j,shadeHex(col,clamp(-.45+.75*k,-.5,.45)),st*1.0,0)}
+    add(cx-r*.35,cy-r*.38,'#ffffff',st*1.6,1);add(cx-r*.28,cy-r*.3,'#ffffff',st*1.1,1);
+    for(let i=0;i<8;i++)add(cx+(i/7-.5)*r*.5,cy-r*1.02,shadeHex(cap,.1),st*.9,1);
+    for(let i=0;i<10;i++){const a=i/10*Math.PI;add(cx+Math.cos(a)*r*.13,cy-r*1.1-Math.sin(a)*r*.13,cap,st*.6,1)}
+  };
+  const hasTop=new Set(G.items.map(it=>it[7]).filter(v=>v>=0)),tops=[],base=[];
+  G.items.forEach((it,i)=>{const [sh,dx,dz,w,h,,,on]=it;base[i]=on>=0?tops[on]:dz*.45;tops[i]=sh==='box'?base[i]-h-w*.32*.45*.5:sh==='cyl'?base[i]-h-w*.17*2:base[i]-h});
+  const order=G.items.map((_,i)=>i).sort((i,j)=>(G.items[i][7]>=0?G.items[G.items[i][7]][2]:G.items[i][2])-(G.items[j][7]>=0?G.items[G.items[j][7]][2]:G.items[j][2])||i-j);
+  for(const i of order){const [sh,dx,,w,h,ck,rk]=G.items[i],col=PAL[ck],rib=PAL[rk];
+    if(sh==='box')box(dx,base[i],w,h,col,rib,!hasTop.has(i));else if(sh==='cyl')cyl(dx,base[i],w,h,col,rib,!hasTop.has(i));else ball(dx,base[i],w,col,PAL.m)}
+  return pts;
+}
+const GPC={};function getGP(style){const key=style+'_'+S.theme;return GPC[key]||(GPC[key]=giftParticles(style,S.theme))}
+// 粒子礼物：k=聚合进度（从中心散开成形）
+function drawGift(style,x,y,u,alpha=1,k=1){
+  const P=getGP(style),t=S.time,cx=x,cy=y-u*.15,e=k;
+  ctx.globalCompositeOperation='lighter';ctx.globalAlpha=.3*alpha*e;ctx.drawImage(sprite((GIFT_PAL[S.theme]||GIFT_PAL[0])[GIFTS[style].items[0][5]],'glow'),x-u*.55,y-u*.13,u*1.1,u*.26);
+  ctx.globalCompositeOperation='source-over';
+  for(const p of P){if(p.gl)continue;const qx=cx+(x+p.x*u-cx)*e,qy=cy+(y+p.y*u-cy)*e;ctx.globalAlpha=alpha*(.78+.22*Math.sin(t*3+p.ph));const s=p.sz*u*2.3;ctx.drawImage(sprite(p.c,'dot'),qx-s/2,qy-s/2,s,s)}
+  ctx.globalCompositeOperation='lighter';
+  for(const p of P){if(!p.gl)continue;const qx=cx+(x+p.x*u-cx)*e,qy=cy+(y+p.y*u-cy)*e;ctx.globalAlpha=alpha*(.25+.3*Math.sin(t*4+p.ph));const s=p.sz*u*2.6;ctx.drawImage(sprite(p.c,'glow'),qx-s/2,qy-s/2,s,s)}
+  ctx.globalCompositeOperation='source-over';ctx.globalAlpha=1;
+}
+
+// ============ 文字（Merry Christmas）============
+// 先在镜头前写成大字（front），圣诞老人离开时移到树的上方（top）
+let textPts=[],textFront={x0:0,x1:0,y:0,size:0},textBox={x0:0,x1:0,y:0,size:0};
+const HERSHEY_MC=[[[15.2,78.8],[9.1,81.8],[6.1,87.9],[6.1,90.9],[9.1,97.0],[15.2,100.0],[18.2,100.0],[24.2,97.0],[27.3,90.9],[27.3,84.8],[24.2,69.7],[21.2,57.6],[15.2,36.4]],[[21.2,57.6],[30.3,81.8],[36.4,93.9],[39.4,97.0],[45.5,100.0],[48.5,100.0],[54.5,97.0],[57.6,90.9],[57.6,84.8],[54.5,69.7],[51.5,57.6],[45.5,36.4]],[[51.5,57.6],[60.6,81.8],[66.7,93.9],[69.7,97.0],[75.8,100.0],[78.8,100.0],[84.8,97.0],[87.9,90.9],[87.9,84.8],[84.8,69.7],[78.8,48.5],[78.8,39.4],[81.8,36.4],[84.8,36.4],[90.9,39.4],[93.9,42.4],[100.0,51.5]],[[103.0,42.4],[109.1,45.5],[112.1,48.5],[115.2,54.5],[115.2,60.6],[112.1,63.6],[109.1,63.6],[103.0,60.6],[100.0,54.5],[100.0,45.5],[103.0,39.4],[109.1,36.4],[115.2,36.4],[121.2,39.4],[124.2,42.4],[130.3,51.5]],[[130.3,51.5],[136.4,60.6],[139.4,66.7],[139.4,60.6],[148.5,60.6],[151.5,57.6],[151.5,51.5],[148.5,42.4],[148.5,39.4],[151.5,36.4],[154.5,36.4],[160.6,39.4],[163.6,42.4],[169.7,51.5]],[[169.7,51.5],[175.8,60.6],[178.8,66.7],[178.8,60.6],[187.9,60.6],[190.9,57.6],[190.9,51.5],[187.9,42.4],[187.9,39.4],[190.9,36.4],[193.9,36.4],[200.0,39.4],[203.0,42.4],[209.1,51.5]],[[209.1,51.5],[215.2,63.6],[209.1,45.5],[209.1,39.4],[212.1,36.4],[218.2,36.4],[224.2,39.4],[230.3,45.5],[236.4,54.5]],[[239.4,63.6],[221.2,9.1],[218.2,3.0],[212.1,0.0],[209.1,3.0],[209.1,9.1],[212.1,18.2],[221.2,27.3],[230.3,33.3],[236.4,36.4],[245.5,42.4],[254.5,51.5]],[[339.4,81.8],[339.4,78.8],[342.4,75.8],[348.5,75.8],[354.5,78.8],[357.6,84.8],[357.6,90.9],[354.5,97.0],[348.5,100.0],[339.4,100.0],[330.3,97.0],[324.2,90.9],[318.2,81.8],[315.2,75.8],[312.1,63.6],[312.1,51.5],[315.2,42.4],[318.2,39.4],[324.2,36.4],[330.3,36.4],[339.4,39.4],[345.5,45.5],[348.5,51.5]],[[363.6,51.5],[369.7,60.6],[378.8,75.8],[381.8,81.8],[384.8,90.9],[384.8,97.0],[381.8,100.0],[375.8,97.0],[372.7,90.9],[369.7,78.8],[366.7,60.6],[363.6,36.4]],[[363.6,36.4],[366.7,45.5],[369.7,51.5],[375.8,60.6],[381.8,63.6],[387.9,63.6],[390.9,60.6],[390.9,54.5],[387.9,45.5],[387.9,39.4],[390.9,36.4],[393.9,36.4],[400.0,39.4],[403.0,42.4],[409.1,51.5]],[[409.1,51.5],[415.2,60.6],[418.2,66.7],[418.2,60.6],[427.3,60.6],[430.3,57.6],[430.3,51.5],[427.3,42.4],[427.3,39.4],[430.3,36.4],[433.3,36.4],[439.4,39.4],[442.4,42.4],[448.5,51.5]],[[457.6,78.8],[457.6,75.8],[460.6,75.8],[460.6,78.8],[457.6,78.8]],[[448.5,51.5],[454.5,63.6],[448.5,45.5],[448.5,39.4],[451.5,36.4],[454.5,36.4],[460.6,39.4],[463.6,42.4],[469.7,51.5]],[[469.7,51.5],[475.8,60.6],[478.8,66.7],[478.8,60.6],[484.8,51.5],[487.9,45.5],[487.9,39.4],[481.8,36.4]],[[469.7,39.4],[475.8,36.4],[487.9,36.4],[493.9,39.4],[497.0,42.4],[503.0,51.5]],[[503.0,51.5],[509.1,60.6],[515.2,72.7]],[[524.2,100.0],[506.1,45.5],[506.1,39.4],[509.1,36.4],[515.2,36.4],[521.2,39.4],[524.2,42.4],[530.3,51.5]],[[506.1,75.8],[527.3,75.8]],[[530.3,51.5],[536.4,60.6],[542.4,63.6],[545.5,60.6],[545.5,57.6],[542.4,45.5],[539.4,36.4]],[[542.4,45.5],[545.5,51.5],[551.5,60.6],[557.6,63.6],[563.6,63.6],[566.7,60.6],[566.7,57.6],[563.6,45.5],[560.6,36.4]],[[563.6,45.5],[566.7,51.5],[572.7,60.6],[578.8,63.6],[584.8,63.6],[587.9,60.6],[587.9,54.5],[584.8,45.5],[584.8,39.4],[587.9,36.4],[590.9,36.4],[597.0,39.4],[600.0,42.4],[606.1,51.5]],[[633.3,54.5],[630.3,60.6],[624.2,63.6],[618.2,63.6],[612.1,60.6],[609.1,57.6],[606.1,51.5],[606.1,45.5],[609.1,39.4],[615.2,36.4],[621.2,36.4],[627.3,39.4],[630.3,45.5],[636.4,63.6],[633.3,48.5],[633.3,39.4],[636.4,36.4],[639.4,36.4],[645.5,39.4],[648.5,42.4],[654.5,51.5]],[[654.5,51.5],[660.6,60.6],[663.6,66.7],[663.6,60.6],[669.7,51.5],[672.7,45.5],[672.7,39.4],[666.7,36.4]],[[654.5,39.4],[660.6,36.4],[672.7,36.4],[678.8,39.4],[681.8,42.4],[687.9,51.5]]];let textPen=[];
+function layoutText(){
+  // 单线连笔字（Hershey 手写体，公有领域）：字形本身就带着真实的笔顺，粒子沿笔画生成
+  const size=Math.min(W*.085,H*.15,150),fyc=H*.17,topSize=Math.min(W*.075,H*.095,110),ratio=topSize/size,topY=H*.13;
+  const k=Math.min(size*.0098,W*.86/682),cx=W/2,X=u=>cx+(u-347)*k,Y=v=>fyc-(v-60)*k;
+  // 1) 笔画：首尾相接的合成一笔；孤立的小笔画（i 的点、t 的横）挪到该单词写完之后
+  const raw=HERSHEY_MC.map(s=>s.map(p=>({x:X(p[0]),y:Y(p[1])}))),len=s=>{let L=0;for(let i=1;i<s.length;i++)L+=Math.hypot(s[i].x-s[i-1].x,s[i].y-s[i-1].y);return L};
+  const words=[[]];raw.forEach((s,i)=>{const pv=raw[i-1];if(pv&&s[0].x-pv[pv.length-1].x>45*k&&Math.min(...s.map(p=>p.x))>Math.max(...pv.map(p=>p.x))+20*k)words.push([]);words[words.length-1].push(s)});
+  const order=[];for(const w of words){const main=[],late=[];w.forEach((s,i)=>{const pv=w[i-1],nx=w[i+1],near=(a,b)=>a&&b&&Math.hypot(a.x-b.x,a.y-b.y)<3*k;
+    const solo=len(s)<30*k&&!near(pv&&pv[pv.length-1],s[0])&&!near(s[s.length-1],nx&&nx[0]);(solo?late:main).push(s)});
+    late.sort((a,b)=>a[0].x-b[0].x);order.push(...main,...late)}
+  const strokes=[];for(const s of order){const L=strokes[strokes.length-1];if(L&&Math.hypot(L[L.length-1].x-s[0].x,L[L.length-1].y-s[0].y)<1.5*k)L.push(...s.slice(1));else strokes.push(s.slice())}
+  // 2) 每一笔做成平滑曲线（Catmull-Rom），按固定间距重采样
+  const spline=a=>{if(a.length<3)return a;const o=[];for(let i=0;i<a.length-1;i++){const p0=a[Math.max(0,i-1)],p1=a[i],p2=a[i+1],p3=a[Math.min(a.length-1,i+2)];
+    for(let j=0;j<6;j++){const t=j/6,t2=t*t,t3=t2*t;o.push({x:.5*(2*p1.x+(-p0.x+p2.x)*t+(2*p0.x-5*p1.x+4*p2.x-p3.x)*t2+(-p0.x+3*p1.x-3*p2.x+p3.x)*t3),y:.5*(2*p1.y+(-p0.y+p2.y)*t+(2*p0.y-5*p1.y+4*p2.y-p3.y)*t2+(-p0.y+3*p1.y-3*p2.y+p3.y)*t3)})}}o.push(a[a.length-1]);return o};
+  const step=Math.max(1.2,size/70),resamp=a=>{const o=[a[0]];let c=0;for(let i=1;i<a.length;i++){let ax=a[i-1].x,ay=a[i-1].y;const bx=a[i].x,by=a[i].y;let sg=Math.hypot(bx-ax,by-ay);while(sg>0&&c+sg>=step){const f=(step-c)/sg;ax+=(bx-ax)*f;ay+=(by-ay)*f;o.push({x:ax,y:ay});sg=Math.hypot(bx-ax,by-ay);c=0}c+=sg}o.push(a[a.length-1]);return o};
+  // 3) 笔的时间：匀速书写，转弯处稍慢，起笔/收笔处有轻微停顿，抬笔移动要花时间
+  const pen=[];let T=0;
+  for(const s0 of strokes){const s=resamp(spline(s0));
+    if(pen.length){const q=pen[pen.length-1];T+=step*6+Math.hypot(s[0].x-q.x,s[0].y-q.y)*.55;pen.push({x:s[0].x,y:s[0].y,t:T,lift:1})}
+    s.forEach((p,i)=>{if(i){const a=s[i-1],b=s[Math.max(0,i-2)],a1=Math.atan2(p.y-a.y,p.x-a.x),a0=Math.atan2(a.y-b.y,a.x-b.x);let da=Math.abs(a1-a0);if(da>Math.PI)da=2*Math.PI-da;T+=Math.hypot(p.x-a.x,p.y-a.y)*(1+da*2.2)}
+      else T+=step*1.5;p.ang=i?Math.atan2(p.y-s[i-1].y,p.x-s[i-1].x):0;pen.push({x:p.x,y:p.y,t:T,lift:0,ang:p.ang})})}
+  for(const q of pen)q.t/=T;
+  // 4) 粒子：沿笔画撒开的星尘 —— 疏密不一、大小不一，外圈有虚的散粒子，偶尔一颗亮白闪光
+  const pts=[],nib=-.6,mk=(fx,fy,o)=>Object.assign({fx,fy,tx:W/2+(fx-W/2)*ratio,ty:topY+(fy-fyc)*ratio,on:-1,sx:0,sy:0,ph:Math.random()*7},o);let x0=1e9,x1=-1e9;
+  pen.forEach((q,i)=>{if(q.lift)return;const nx=pen[i+1]&&!pen[i+1].lift?pen[i+1]:pen[i-1];if(!nx)return;const a=nx===pen[i+1]?Math.atan2(nx.y-q.y,nx.x-q.x):Math.atan2(q.y-nx.y,q.x-nx.x);
+    const wdt=size*(.026+.05*Math.abs(Math.sin(a-nib))),ox=-Math.sin(a),oy=Math.cos(a),n=Math.max(1,Math.round(wdt/step*.55));
+    for(let j=0;j<n;j++){if(Math.random()<.3)continue;const o=(Math.random()-.5)*wdt,fx=q.x+ox*o+rand(-.6,.6)*step,fy=q.y+oy*o+rand(-.6,.6)*step;
+      const big=Math.random()<.04;pts.push(mk(fx,fy,{rt:q.t,sz:big?rand(1.5,2.1):rand(.45,1.15),white:big||Math.random()<.08}));x0=Math.min(x0,fx);x1=Math.max(x1,fx)}
+    if(Math.random()<.4){const r=wdt*rand(.7,2.6),an=rand(0,7),fx=q.x+Math.cos(an)*r,fy=q.y+Math.sin(an)*r;pts.push(mk(fx,fy,{rt:q.t,sz:rand(.35,.8),dim:1}))}});
+  pts.sort((a,b)=>a.fx-b.fx);
+  const prevOn=textPts.length&&textPts.every(p=>p.on>=0);textPts=pts;textPen=pen;if(prevOn)for(const p of pts){p.on=1;p.sx=p.fx;p.sy=p.fy}
+  textFront={x0:x0-size*.05,x1:x1+size*.05,y:fyc,size};
+  const tw=x1-x0;textBox={x0:W/2-tw/2*ratio,x1:W/2+tw/2*ratio,y:topY,size:topSize};
+}
+function headY(hx){let s=0,n=0;for(const p of textPts){if(p.fx<hx-6)continue;if(p.fx>hx+6)break;s+=p.fy;n++}return n?s/n:null}
+function drawText(dt){const FX=window.__fx;FX.setTransform(DPR,0,0,DPR,0,0);FX.clearRect(0,0,W,H);
+  if(!textPts.length)return;FX.globalCompositeOperation='lighter';const t=S.time,span=(textFront.x1-textFront.x0)||1;
+  for(const p of textPts){if(p.on<0)continue;p.on+=dt;const k=easeOut(clamp(p.on/.45,0,1));
+    const mk=ease(clamp(S.textMorph*1.6-(p.fx-textFront.x0)/span*.6,0,1)),bx=lerp(p.fx,p.tx,mk),by=lerp(p.fy,p.ty,mk)-Math.sin(mk*Math.PI)*H*.04;
+    const x=lerp(p.sx,bx,k),y=lerp(p.sy,by,k),tw=.3+.7*(.5+.5*Math.sin(t*(2.2+p.ph*.35)+p.ph*3)),fl=lerp(textFront.size,textBox.size,mk)*(p.dim?.016:.006);
+    FX.globalAlpha=tw*(p.dim?.38:1);const s=(p.sz||1)*lerp(textFront.size,textBox.size,mk)*.06*(1+(1-k)*1.5),xx=x+Math.sin(t*1.6+p.ph*2)*fl,yy=y+Math.cos(t*1.3+p.ph*3)*fl;FX.drawImage(sprite(p.white?'#ffffff':'#ffd27a','glow'),xx-s/2,yy-s/2,s,s)}
+  FX.globalCompositeOperation='source-over';FX.globalAlpha=1;
+}
+
+// ============ 圣诞老人 & 雪橇（先用矢量画，再采样成粒子）============
+function drawReindeer(g,x,y,t){
+  g.save();g.translate(x,y);const leg=Math.sin(t*11),leg2=Math.sin(t*11+1.6);
+  g.strokeStyle='#5a3418';g.lineWidth=4;g.lineCap='round';
+  const legs=[[16,6,leg],[10,6,leg2],[-16,6,-leg],[-21,6,-leg2]];
+  for(const [lx,ly,s] of legs){g.beginPath();g.moveTo(lx,ly);const kx=lx+Math.sin(s*.7)*10,ky=ly+10;g.lineTo(kx,ky);g.lineTo(kx+Math.sin(s*.9+.6)*8,ky+9);g.stroke()}
+  g.fillStyle='#8b5a2b';g.beginPath();g.ellipse(0,0,27,12,-.05,0,7);g.fill();
+  g.fillStyle='#d9b48a';g.beginPath();g.ellipse(2,5,18,5,0,0,7);g.fill();
+  g.fillStyle='#8b5a2b';g.beginPath();g.moveTo(18,-6);g.lineTo(30,-24);g.lineTo(37,-20);g.lineTo(26,-1);g.fill();
+  g.beginPath();g.ellipse(38,-26,11,6.5,.25,0,7);g.fill();
+  g.fillStyle='#4a2a12';g.beginPath();g.arc(48,-23,2.6,0,7);g.fill();
+  g.fillStyle='#fff8ec';g.beginPath();g.ellipse(-27,-4,5,4,0,0,7);g.fill();
+  g.fillStyle='#111';g.beginPath();g.arc(40,-28,1.6,0,7);g.fill();
+  g.fillStyle='#6b4220';g.beginPath();g.ellipse(31,-32,5,2.5,-.8,0,7);g.fill();
+  g.strokeStyle='#e9d3a8';g.lineWidth=2.4;g.beginPath();g.moveTo(34,-32);g.lineTo(30,-48);g.moveTo(31,-42);g.lineTo(24,-48);g.moveTo(30,-48);g.lineTo(34,-54);g.moveTo(37,-32);g.lineTo(40,-47);g.moveTo(39,-41);g.lineTo(46,-46);g.stroke();
+  g.fillStyle='#c8102e';g.fillRect(14,-12,10,4);g.fillStyle='#ffd166';g.beginPath();g.arc(20,-6,2.5,0,7);g.fill();
+  g.restore();
+}
+function drawSanta(g,x,y,sc,face,t,armUp){
+  g.save();g.translate(x,y);g.scale(sc*face,sc);
+  const bob=Math.sin(t*6)*2;
+  for(let i=0;i<3;i++)drawReindeer(g,140+i*78,-16+Math.sin(t*6+i*1.3)*5,t+i*.35);
+  g.strokeStyle='#ffd166';g.lineWidth=1.6;for(let i=0;i<3;i++){g.beginPath();g.moveTo(52,-6);g.quadraticCurveTo(100+i*30,4,158+i*78,-22+Math.sin(t*6+i*1.3)*5);g.stroke()}
+  g.translate(0,bob);
+  // 礼物袋
+  g.fillStyle='#3d6b3a';g.beginPath();g.ellipse(-42,-30,20,22,-.2,0,7);g.fill();g.fillStyle='#e63946';g.fillRect(-52,-48,12,10);g.fillStyle='#ffd166';g.fillRect(-36,-52,10,12);
+  // 圣诞老人
+  g.fillStyle='#c8102e';g.beginPath();g.ellipse(-8,-26,19,22,0,0,7);g.fill();
+  g.fillStyle='#fff8ec';g.fillRect(-26,-12,36,6);
+  g.fillStyle='#f2c9a0';g.beginPath();g.arc(-4,-54,10,0,7);g.fill();
+  g.fillStyle='#fff8ec';g.beginPath();g.moveTo(-14,-54);g.quadraticCurveTo(-12,-30,0,-30);g.quadraticCurveTo(8,-38,7,-52);g.quadraticCurveTo(-4,-46,-14,-54);g.fill();
+  g.fillStyle='#c8102e';g.beginPath();g.moveTo(-14,-60);g.quadraticCurveTo(-8,-82,10,-76);g.quadraticCurveTo(20,-74,24,-62);g.lineTo(6,-60);g.closePath();g.fill();
+  g.fillStyle='#fff8ec';g.beginPath();g.arc(25,-60,4.5,0,7);g.fill();g.fillRect(-16,-63,24,6);
+  g.fillStyle='#222';g.beginPath();g.arc(1,-55,1.4,0,7);g.fill();
+  g.strokeStyle='#c8102e';g.lineWidth=8;g.lineCap='round';g.beginPath();g.moveTo(0,-38);
+  if(armUp)g.lineTo(22,-60);else g.lineTo(24,-24);g.stroke();
+  g.fillStyle='#1e3a2a';g.beginPath();g.arc(armUp?24:26,armUp?-63:-23,5,0,7);g.fill();
+  // 雪橇
+  g.fillStyle='#b5122b';g.beginPath();g.moveTo(-60,-30);g.lineTo(-60,6);g.quadraticCurveTo(-60,14,-50,14);g.lineTo(40,14);g.quadraticCurveTo(64,14,64,-8);g.quadraticCurveTo(64,-28,48,-22);g.lineTo(32,-8);g.lineTo(-42,-8);g.lineTo(-50,-30);g.closePath();g.fill();
+  g.strokeStyle='#ffd166';g.lineWidth=2.5;g.stroke();
+  g.strokeStyle='#e9b54c';g.lineWidth=3.5;g.beginPath();g.moveTo(-64,28);g.lineTo(52,28);g.quadraticCurveTo(76,28,72,10);g.stroke();
+  g.lineWidth=2.5;g.beginPath();g.moveTo(-40,14);g.lineTo(-40,28);g.moveTo(20,14);g.lineTo(20,28);g.stroke();
+  g.restore();
+}
+const HAND={x:24,y:-63},TIPV={x:46,y:-62};
+const WAND_REST={x:1.5,y:-.45,z:.8};
+let SANTA_P=null;
+function buildSantaParticles(){
+  SANTA_P=[[],[]];const SC=3,c=document.createElement('canvas');c.width=440*SC;c.height=160*SC;const g=c.getContext('2d',{willReadFrequently:true}),ox=80*SC,oy=100*SC;
+  const q=v=>Math.min(255,((v>>4)<<4)|8);
+  for(let arm=0;arm<2;arm++)for(let f=0;f<3;f++){
+    g.clearRect(0,0,c.width,c.height);drawSanta(g,ox,oy,SC,1,f*(Math.PI*2/3)/11,!!arm);
+    const d=g.getImageData(0,0,c.width,c.height).data,pts=[],stp=6;
+    for(let y=0;y<c.height;y+=stp)for(let x=0;x<c.width;x+=stp){const i=(y*c.width+x)*4;if(d[i+3]<200)continue;
+      pts.push({x:(x-ox)/SC+rand(-.5,.5),y:(y-oy)/SC+rand(-.5,.5),c:hex(q(d[i]),q(d[i+1]),q(d[i+2])),ph:Math.random()*7,gl:Math.random()<.07})}
+    SANTA_P[arm][f]=pts;
+  }
+}
+function drawSantaP(x,y,sc,face,t,arm,alpha){
+  const P=SANTA_P[arm?1:0][Math.floor(t*11/(Math.PI*2)*3)%3],sz=Math.max(1.6,sc*4.6);
+  ctx.globalCompositeOperation='lighter';ctx.globalAlpha=.22*alpha;const hs=sc*420;ctx.drawImage(sprite('#ffd77a','glow'),x+face*sc*120-hs/2,y-20*sc-hs*.3,hs,hs*.6);
+  ctx.globalCompositeOperation='source-over';
+  for(const p of P){ctx.globalAlpha=alpha*(.85+.15*Math.sin(t*4+p.ph));const qx=x+p.x*sc*face,qy=y+p.y*sc+Math.sin(t*3+p.ph)*.5*sc;ctx.drawImage(sprite(p.c,'dot'),qx-sz/2,qy-sz/2,sz,sz)}
+  ctx.globalCompositeOperation='lighter';
+  for(const p of P){if(!p.gl)continue;ctx.globalAlpha=alpha*(.5+.5*Math.sin(t*6+p.ph));const s=sz*3;ctx.drawImage(sprite('#fff3c4','glow'),x+p.x*sc*face-s/2,y+p.y*sc-s/2,s,s)}
+  ctx.globalCompositeOperation='source-over';ctx.globalAlpha=1;
+}
+function santaUpdate(dt){
+  const s=S.santa;s.t+=dt;const t=s.t;let pose,faceT=null,turning=false;
+  const ws=Math.min(W,H*1.5)/1150,TF=textFront,off={x:(HAND.x+TIPV.x)*ws,y:(HAND.y+TIPV.y)*ws};
+  if(t<5){ // 从树背后的远方，朝镜头飞来
+    const k=ease(t/5),z=lerp(-16,3,k),x=Math.sin(k*Math.PI)*2.8-k*.6,y=lerp(3,.25,k)+Math.sin(t*2)*.05,q=proj(x,y,z);pose={x:q.x,y:q.y,sc:q.s*.0026,z,alpha:clamp(t*2,0,1)};
+  }else if(t<6.2){const a=s.aEnd||(s.aEnd={x:s.pose.x,y:s.pose.y,sc:s.pose.sc}),k=ease((t-5)/1.2),hy=headY(TF.x0+8)||TF.y;
+    pose={x:lerp(a.x,TF.x0-off.x,k),y:lerp(a.y,hy-off.y,k)-Math.sin(k*Math.PI)*H*.05,sc:lerp(a.sc,ws,k),z:3,alpha:1};
+  }else if(t<11.2){ // 在镜头前写下大大的 Merry Christmas
+    const k=(t-6.2)/5,hx=lerp(TF.x0,TF.x1,k);let hy=headY(hx);if(hy==null)hy=s.hy??TF.y;s.hy=s.hy==null?hy:lerp(s.hy,hy,.25);
+    const head={x:hx,y:s.hy+Math.sin(t*13)*TF.size*.05};pose={x:head.x-off.x,y:head.y-off.y,sc:ws,z:3,alpha:1};faceT=1;
+    for(const p of textPts){if(p.fx>hx)break;if(p.on<0){p.on=0;p.sx=head.x;p.sy=head.y}}
+    if(Math.random()<.12)sfx('twinkle');
+  }else if(t<15.2){ // 转身绕一圈飞回远方，字移到树上方
+    if(!s.lEnd){s.lEnd={x:s.pose.x,y:s.pose.y,sc:s.pose.sc};for(const p of textPts)if(p.on<0){p.on=0;p.sx=p.fx;p.sy=p.fy}}
+    const k=ease((t-11.2)/4),a=s.lEnd,P1={x:W*.92,y:H*.1},P2={x:W*.36,y:H*.22},m=1-k;
+    pose={x:m*m*a.x+2*m*k*P1.x+k*k*P2.x,y:m*m*a.y+2*m*k*P1.y+k*k*P2.y,sc:lerp(a.sc,a.sc*.1,easeOut(k)),z:k>.55?-1:3,alpha:k>.8?1-(k-.8)/.2:1};
+    faceT=clamp(1-(k-.12)/.3*2,-1,1);turning=true;S.textMorph=ease(clamp((t-11.8)/3,0,1));
+  }else{S.textMorph=1;if(!S.cardShown){S.cardShown=true;setTimeout(showCard,500)}pose={x:-999,y:-999,sc:.01,z:3,alpha:0}}
+  if(faceT==null){const vx=pose.x-(s.pose?s.pose.x:pose.x);faceT=Math.abs(vx)>.4?(vx>0?1:-1):(s.faceT??1)}
+  s.faceT=faceT;if(turning)s.face=faceT;else s.face+=(faceT-s.face)*Math.min(1,dt*4);
+  s.pose=pose;s.hand={x:pose.x+HAND.x*pose.sc*s.face,y:pose.y+HAND.y*pose.sc};s.tip={x:s.hand.x+TIPV.x*pose.sc*s.face,y:s.hand.y+TIPV.y*pose.sc};
+  s.bell-=dt;if(s.bell<=0&&t<15){s.bell=.13;sfx('bell')}
+  if(pose.alpha>0&&Math.random()<.8)spark(pose.x-s.face*40*pose.sc,pose.y+10*pose.sc,Math.random()<.5?'#ffd77a':'#ffffff',1,.4,Math.max(.4,pose.sc*1.4));
+}
+function santaDraw(front){
+  const s=S.santa;if(!s||!s.pose||!(s.pose.alpha>0))return;const p=s.pose,inFront=p.z>-.2;if(front!==inFront)return;
+  drawSantaP(p.x,p.y,p.sc,s.face,s.t,s.t>4.6,p.alpha);
+  if(s.hasWand){drawWand(s.tip.x,s.tip.y,Math.atan2(s.hand.y-s.tip.y,s.hand.x-s.tip.x),Math.max(.3,p.sc*1.1),p.alpha);if(Math.random()<.7)spark(s.tip.x,s.tip.y,'#ffe7a6',1,.6,.8)}
+}
+
+// ============ 手势识别 ============
+let landmarker=null,video=$('video'),camCv=$('camCv'),camG=camCv.getContext('2d'),lastVT=-1,hands=[],handAR=4/3;
+const INP={present:false,src:'none',x:0,y:0,ang:.8,pointerOk:false,pointDown:false,pinch:false,open:false,palmX:0,heart:false,openish:false,tag:''};
+const mouse={x:0,y:0,down:false,inside:false,lastMove:-9};
+const smooth={x:null,y:null,cx:null,cy:null};
+let pinchState=false,palmHist=[],lastSwipe=0;
+async function startCamera(){
+  const err=$('camErr');err.textContent='正在打开摄像头…';
+  try{
+    const stream=await navigator.mediaDevices.getUserMedia({video:{width:{ideal:640},height:{ideal:480},facingMode:'user'},audio:false});
+    video.srcObject=stream;await video.play();handAR=(video.videoWidth||640)/(video.videoHeight||480);
+    $('cam').classList.add('show');$('camTag').textContent='正在加载手势模型…';err.textContent='';
+    begin(true);
+    const vision=await import('https://cdn.jsdelivr.net/npm/@mediapipe/tasks-vision@0.10.14/vision_bundle.mjs');
+    const fs=await vision.FilesetResolver.forVisionTasks('https://cdn.jsdelivr.net/npm/@mediapipe/tasks-vision@0.10.14/wasm');
+    const opts=d=>({baseOptions:{modelAssetPath:'https://storage.googleapis.com/mediapipe-models/hand_landmarker/hand_landmarker/float16/1/hand_landmarker.task',delegate:d},runningMode:'VIDEO',numHands:2,minHandDetectionConfidence:.6,minTrackingConfidence:.5});
+    try{landmarker=await vision.HandLandmarker.createFromOptions(fs,opts('GPU'))}catch(e){landmarker=await vision.HandLandmarker.createFromOptions(fs,opts('CPU'))}
+    $('camTag').textContent='把手举到镜头前';S.camOn=true;
+  }catch(e){
+    console.warn(e);
+    if(S.stage==='intro'){err.textContent='没能打开摄像头：请用 Chrome / Edge 直接打开这个 HTML 文件并允许摄像头权限。也可以先用鼠标体验。'}
+    else{$('camTag').textContent='手势模型加载失败，可用鼠标继续';}
+  }
+}
+const D=(a,b)=>Math.hypot((a.x-b.x)*handAR,a.y-b.y);
+function analyzeHand(lm){
+  const palm=D(lm[0],lm[9])||.1,ratio=(tip,mcp)=>D(lm[0],lm[tip])/(D(lm[0],lm[mcp])||.01);
+  const ext=[[8,5],[12,9],[16,13],[20,17]].map(([t,m])=>ratio(t,m));
+  const isExt=ext.map(r=>r>1.5),isCurl=ext.map(r=>r<1.32);
+  const tips=[4,8,12,16,20];let cx=0,cy=0;for(const i of tips){cx+=lm[i].x;cy+=lm[i].y}cx/=5;cy/=5;
+  let spread=0;for(const i of tips)spread+=Math.hypot((lm[i].x-cx)*handAR,lm[i].y-cy);spread=spread/5/palm;
+  const nExt=isExt.filter(Boolean).length;
+  const pointing=isExt[0]&&isCurl[1]&&isCurl[2]&&isCurl[3];
+  const pointDown=pointing&&(lm[8].y-lm[5].y)>palm*.45,pointUp=pointing&&(lm[5].y-lm[8].y)>palm*.45;
+  let pcx=0,pcy=0;for(const i of[0,5,9,13,17]){pcx+=lm[i].x;pcy+=lm[i].y}
+  return{lm,palm,nExt,pointing,pointDown,pointUp,spread,cx,cy,pcx:pcx/5,pcy:pcy/5,indexExt:isExt[0]};
+}
+const toSX=x=>clamp(W*(.5-(x-.5)*1.4),0,W),toSY=y=>clamp(H*(.5+(y-.5)*1.4),0,H);
+function processHands(){
+  if(landmarker&&video.readyState>=2&&video.currentTime!==lastVT){
+    lastVT=video.currentTime;try{const r=landmarker.detectForVideo(video,performance.now());hands=(r.landmarks||[]).map(analyzeHand)}catch(e){hands=[]}
+    drawCam();
+  }
+  INP.heart=false;INP.tag='';
+  if(hands.length){
+    const h=hands[0];INP.present=true;INP.src='hand';
+    const tx=toSX(h.lm[8].x),ty=toSY(h.lm[8].y),cx=toSX(h.cx),cy=toSY(h.cy);
+    const a=.5;smooth.x=smooth.x==null?tx:lerp(smooth.x,tx,a);smooth.y=smooth.y==null?ty:lerp(smooth.y,ty,a);
+    smooth.cx=smooth.cx==null?cx:lerp(smooth.cx,cx,a);smooth.cy=smooth.cy==null?cy:lerp(smooth.cy,cy,a);
+    INP.x=smooth.x;INP.y=smooth.y;INP.gx=smooth.cx;INP.gy=smooth.cy;
+    const mx=toSX(h.lm[5].x),my=toSY(h.lm[5].y);INP.ang=Math.atan2(my-ty,mx-tx);
+    INP.pointerOk=h.indexExt;INP.pointDown=h.pointDown;INP.pointUp=h.pointUp;
+    if(!pinchState&&h.spread<.32)pinchState=true;else if(pinchState&&h.spread>.45)pinchState=false;
+    INP.pinch=pinchState;INP.open=h.nExt>=4&&h.spread>.55;INP.openish=h.nExt>=3;INP.palmX=toSX(h.pcx);
+    INP.tag=h.pointDown?'👇 食指朝下':h.pointUp?'☝️ 食指朝上':h.pointing?'☝️ 食指':INP.pinch?'🤌 五指聚拢':INP.open?'🖐 手掌张开':'✋ 识别到手';
+    if(hands.length>=2){const A=hands[0].lm,B=hands[1].lm,pm=(hands[0].palm+hands[1].palm)/2;
+      const dT=D(A[4],B[4])/pm,dI=D(A[8],B[8])/pm,up=(A[8].y+B[8].y)/2<(A[4].y+B[4].y)/2;
+      INP.heart=dT<.75&&dI<.75&&up;INP.tag=INP.heart?'🫶 比心':'🙌 双手'}
+  }else if(mouse.inside&&S.time-mouse.lastMove<4||mouse.down){
+    INP.present=true;INP.src='mouse';INP.x=mouse.x;INP.y=mouse.y;INP.gx=mouse.x;INP.gy=mouse.y;INP.ang=.9;INP.pointerOk=true;INP.pointDown=false;INP.pointUp=false;INP.pinch=mouse.down;INP.open=!mouse.down;INP.openish=false;
+  }else{INP.present=false;INP.src='none';INP.pointUp=false;INP.pointDown=false;INP.pinch=false;INP.open=false;smooth.x=null;smooth.cx=null}
+  if(S.camOn)$('camTag').textContent=INP.src==='hand'?INP.tag:'把手举到镜头前';
+}
+const CONN=[[0,1],[1,2],[2,3],[3,4],[0,5],[5,6],[6,7],[7,8],[5,9],[9,10],[10,11],[11,12],[9,13],[13,14],[14,15],[15,16],[13,17],[17,18],[18,19],[19,20],[0,17]];
+function drawCam(){camG.clearRect(0,0,320,240);for(const h of hands){camG.strokeStyle='rgba(255,215,122,.9)';camG.lineWidth=2;camG.beginPath();for(const[a,b]of CONN){camG.moveTo(h.lm[a].x*320,h.lm[a].y*240);camG.lineTo(h.lm[b].x*320,h.lm[b].y*240)}camG.stroke();camG.fillStyle='#fff';for(const p of h.lm){camG.beginPath();camG.arc(p.x*320,p.y*240,2.5,0,7);camG.fill()}}}
+
+// 食指朝上“划一下”：从起点往一边划出去再收回 = 选一次（方向由划出去的那一下决定）
+// home：手在起点附近（起点会慢慢跟着手漂移）→ out：划出超过阈值 → 收回到峰值的 45% 以内，或在外面停 0.9 秒 = 确认一次
+// → cool：等手回到起点附近才接受下一次，所以“回程”不会被当成反方向
+const SW={st:'idle',ax:0,peak:0,dir:0,t0:0,lost:0,last:0,drag:0,armed:0};
+function detectSwipe(){
+  const now=S.time,dt=Math.min(.1,now-SW.last||0);SW.last=now;
+  const ok=INP.src==='hand'&&INP.pointUp&&!S.holding&&now-lastSwipe>.5;
+  if(!ok){if(SW.st!=='idle'){if(!SW.lost)SW.lost=now;if(now-SW.lost>.18){SW.st='idle';swDrag(0)}}return 0}   // 短暂丢手（<0.18 秒）不打断
+  SW.lost=0;const th=W*.09;
+  if(SW.st==='idle'){SW.st='home';SW.ax=INP.x;swDrag(0);return 0}
+  const d=INP.x-SW.ax;
+  if(SW.st==='home'){
+    if(Math.abs(d)<th*.5)SW.ax+=d*(1-Math.exp(-dt/.8));
+    if(Math.abs(d)>th){SW.st='out';SW.dir=Math.sign(d);SW.peak=Math.abs(d);SW.t0=now}
+    swDrag(Math.abs(d)>th*.25?d:0);return 0}
+  if(SW.st==='out'){
+    const e=d*SW.dir;SW.peak=Math.max(SW.peak,e);swDrag(d);
+    if(e<SW.peak*.45||now-SW.t0>.9){SW.st='cool';SW.t0=now;swDrag(0);return SW.dir>0?1:-1}
+    return 0}
+  if(SW.st==='cool'){if(Math.abs(d)<th*.45||now-SW.t0>3){SW.st='home';if(Math.abs(d)>=th*.45)SW.ax=INP.x}return 0}
+  return 0;
+}
+// 手往哪边划，就选哪边的那个：转盘把那一侧的颜色往中间轻轻带一点，并点亮那一侧的箭头
+let trackBase=0;
+function swDrag(d){const k=Math.max(-1,Math.min(1,d/(W*.2)));if(Math.abs(k-SW.drag)<.004&&k!==0)return;SW.drag=k;
+  track.style.transform=`translateX(${trackBase-k*46}px)`;const a=k<-.3?-1:k>.3?1:0;if(a!==SW.armed){SW.armed=a;$('next').classList.toggle('armed',a===1);$('prev').classList.toggle('armed',a===-1)}}
+
+// ============ 选择器 UI ============
+const track=$('track');
+function renderPicker(){
+  const list=S.pickMode==='tree'?THEMES:LIGHTS,cur=S.pickMode==='tree'?S.theme:S.light;
+  track.innerHTML=list.map((it,i)=>{const cols=S.pickMode==='tree'?it.colors.map(c=>c[0]):it.colors;
+    const stops=cols.map((c,j)=>`${c} ${j/cols.length*100}% ${(j+1)/cols.length*100}%`).join(',');
+    const bgc=S.pickMode==='tree'?`conic-gradient(from 200deg at 50% 70%,${stops})`:`radial-gradient(circle at 30% 30%,${cols[0]},transparent 40%),radial-gradient(circle at 70% 40%,${cols[1%cols.length]},transparent 40%),radial-gradient(circle at 50% 75%,${cols[2%cols.length]},transparent 42%),#141626`;
+    return`<button class="item${i===cur?' on':''}" data-i="${i}"><div class="sw${S.pickMode==='tree'?' tree':''}" style="background:${bgc}"></div><div class="iname">${it.name}</div></button>`}).join('');
+  requestAnimationFrame(centerTrack);
+}
+function centerTrack(){const cur=S.pickMode==='tree'?S.theme:S.light,el=track.children[cur];if(!el)return;const vp=track.parentElement.clientWidth;trackBase=vp/2-(el.offsetLeft+el.offsetWidth/2);track.style.transform=`translateX(${trackBase-(SW.drag||0)*46}px)`}
+function choose(i){
+  if(S.pickMode==='tree'){const n=THEMES.length;i=(i+n)%n;if(i===S.theme)return;S.prevTheme=S.theme;S.theme=i;S.themeT=S.time;drawBg();paintThumbs()}
+  else{const n=LIGHTS.length;i=(i+n)%n;if(i===S.light)return;S.prevLight=S.light;S.light=i;S.lightT=S.time}
+  [...track.children].forEach((el,j)=>el.classList.toggle('on',j===i));centerTrack();sfx('tick');
+}
+const step=d=>choose((S.pickMode==='tree'?S.theme:S.light)+d);
+track.addEventListener('click',e=>{const b=e.target.closest('.item');if(b)choose(+b.dataset.i)});
+$('prev').onclick=()=>step(-1);$('next').onclick=()=>step(1);
+document.querySelectorAll('.ptab').forEach(b=>b.onclick=()=>setPickMode(b.dataset.mode));
+function setPickMode(m){S.pickMode=m;document.querySelectorAll('.ptab').forEach(b=>b.classList.toggle('on',b.dataset.mode===m));renderPicker()}
+
+// 托盘
+const tray=$('tray');const gbtns=GIFTS.map((g,i)=>{const b=document.createElement('button');b.className='gbtn';b.title=g.name;const c=document.createElement('canvas');b.appendChild(c);tray.appendChild(b);b.onclick=()=>{if(!S.usedStyles[i]&&!S.holding){S.nextStyle=i;updateTray()}};return{b,c}});
+function paintThumbs(){gbtns.forEach(({c},i)=>{c.width=128;c.height=116;const g=c.getContext('2d');withCtx(g,()=>drawGift(i,64,104,150))})}
+function withCtx(g,fn){const o=ctx;ctx=g;try{fn()}finally{ctx=o}}
+function updateTray(){gbtns.forEach(({b},i)=>{b.classList.toggle('used',S.usedStyles[i]);b.classList.toggle('next',i===S.nextStyle&&!S.usedStyles[i])})}
+
+// 步骤
+$('steps').innerHTML=STEPS.map((s,i)=>`<div class="step" data-i="${i}"><b>${i+1}</b><span>${s}</span></div>`).join('');
+function setStepUI(k){document.querySelectorAll('.step').forEach((el,i)=>{el.classList.toggle('on',i===k);el.classList.toggle('done',i<k)})}
+
+// 提示
+let hintKey='';
+function setHint(emoji,title,sub,btn,fn){
+  const key=emoji+title+sub+(btn||'');if(key===hintKey)return;hintKey=key;
+  $('hint').classList.remove('hide');$('hintEmoji').textContent=emoji;$('hintTitle').textContent=title;$('hintSub').textContent=sub;
+  const b=$('hintBtn');if(btn){b.hidden=false;b.textContent=btn;b.onclick=fn}else b.hidden=true;
+}
+function setRing(k){$('hintRing').setAttribute('stroke-dashoffset',157*(1-clamp(k,0,1)))}
+
+// ============ 流程 ============
+function begin(cam){
+  if(S.stage!=='intro')return;initAudio();$('intro').classList.add('hide');$('picker').classList.remove('hide');
+  S.stage='select';setStepUI(0);renderPicker();
+}
+function summonWand(){S.stage='spiral';S.spiral=0;S.grow=0;S.autoSpiral=false;S.wand.mode='hand';setStepUI(2);sfx('summon');spark(INP.present?INP.x:W/2,INP.present?INP.y:H/2,'#ffd77a',30,1.5)}
+function finishGrow(){S.stage='growing';S.autoSpiral=false;S.wand.mode='hand';sfx('grow');for(let k=0;k<=SPN;k+=4){const p=spiralPts[k];spark(p.x,p.y,'#ffe6a0',1,.9)}}
+function enterDecorate(){S.stage='decorate';S.grow=1.25;setStepUI(3);$('picker').classList.remove('hide');document.querySelector('.ptab[data-mode=light]').hidden=false;setPickMode('light');$('tray').classList.remove('hide');updateTray()}
+function freeSlots(){const used=new Set(S.gifts.map(g=>g.slot));return[0,1,2,3,4].filter(i=>!used.has(i))}
+function slotScreen(i){const w=slotWorld(i);return proj(w.x,w.y,w.z)}
+function giftU(i){return slotScreen(i).s*SLOTS[i].s}
+function enterHeart(){if(S.stage!=='decorate')return;S.stage='heart';S.heartHold=0;setStepUI(4);$('tray').classList.add('hide');$('picker').classList.add('hide');
+  const wr=proj(WAND_REST.x,WAND_REST.y,WAND_REST.z);S.wand.mode='fly';S.wand.fx=S.wand.x;S.wand.fy=S.wand.y;S.wand.ft=0;S.wand.tx=wr.x;S.wand.ty=wr.y}
+function startSanta(){
+  if(S.stage!=='heart')return;
+  S.stage='heartburst';S.burstT=S.time;$('hint').classList.add('hide');setStepUI(5);$('steps').style.opacity='0';S.textMorph=0;S.cardShown=false;
+  sfx('heart');setTimeout(()=>sfx('star'),120);burstHeart();
+}
+function launchSanta(){
+  if(window.__santa3d&&window.__santa3d.ready){S.stage='santa3d';window.__santa3d.start(()=>{if(!S.cardShown){S.cardShown=true;setTimeout(showCard,400)}});return}
+  S.stage='santa';if(!SANTA_P)buildSantaParticles();S.santa={t:0,face:1,bell:0,pose:null,hasWand:false};
+}
+
+function update(dt){
+  S.time+=dt;S.rot+=dt*(.22+.48*(S.cardSpin||0)*(S.cardSpin||0));processHands();
+  const st=S.stage;
+  // 仙女棒位置
+  const w=S.wand;
+  if(w.mode==='hand'){if(INP.present){w.x=INP.x;w.y=INP.y;w.ang=lerp(w.ang,INP.ang,.3);w.alpha=Math.min(1,w.alpha+dt*3)}else w.alpha=Math.max(.0,w.alpha-dt*2)}
+  else if(w.mode==='fly'){w.ft+=dt;const k=ease(clamp(w.ft/1.2,0,1));w.x=lerp(w.fx,w.tx,k);w.y=lerp(w.fy,w.ty,k)-Math.sin(k*Math.PI)*80;w.ang=lerp(w.ang,Math.PI/2+.35,.08);w.alpha=1;if(k>=1)w.mode='rest'}
+  else if(w.mode==='rest'){const wr=proj(WAND_REST.x,WAND_REST.y,WAND_REST.z);w.x=wr.x;w.y=wr.y+Math.sin(S.time*2)*4;w.ang=Math.PI/2+.35;if(S.santa&&S.santa.t>4&&S.santa.tip){w.mode='toSanta';w.fx=w.x;w.fy=w.y;w.ft=0}}
+  else if(w.mode==='toSanta'){w.ft+=dt;const k=ease(clamp(w.ft/1.1,0,1)),tg=S.santa.tip;w.x=lerp(w.fx,tg.x,k);w.y=lerp(w.fy,tg.y,k)-Math.sin(k*Math.PI)*120;w.ang+=dt*8*(1-k);if(k>=1){w.mode='none';S.santa.hasWand=true;sfx('pick')}}
+  if((w.mode==='hand'||w.mode==='rest'||w.mode==='auto'||w.mode==='toSanta')&&w.alpha>.3&&Math.random()<.5)spark(w.x,w.y,Math.random()<.5?'#ffd77a':'#fff',1,.5,.8);
+
+  if(st==='select'){
+    const sw=detectSwipe();if(sw)step(sw);
+    if(INP.pointDown)S.holdPoint+=dt;else S.holdPoint=Math.max(0,S.holdPoint-dt*2);
+    setRing(S.holdPoint/.6);
+    const cam=S.camOn;
+    setHint(cam?'☝️':'🎨',cam?'食指朝上，往左或往右划一下再收回 = 换一个颜色':'点击上方，选择树的颜色',cam?'选好后把食指朝下停一下，召唤仙女棒':'选好后点右边按钮召唤仙女棒','召唤仙女棒 ✨',summonWand);
+    if(S.holdPoint>=.6){S.holdPoint=0;setRing(0);summonWand()}
+  }
+  else if(st==='spiral'){
+    setHint('🌀','从下往上，螺旋绕着树画',INP.src==='mouse'?'从树底的光点出发，沿着虚线一圈圈往上移动':'用仙女棒从树底的光点出发，沿着虚线一圈圈往上绕','自动种树',()=>{S.autoSpiral=true});
+    if(S.autoSpiral){S.spiral=Math.min(SPN,S.spiral+SPN*dt/3.2);const p=spiralPts[Math.floor(S.spiral)];S.wand.mode='auto';S.wand.x=p.x;S.wand.y=p.y;S.wand.alpha=1;S.wand.ang=.9}
+    else if(INP.present&&INP.pointerOk){const tol=Math.min(W,H)*.09,a=Math.floor(S.spiral),b=Math.min(SPN,a+Math.round(SPN*.12));let best=-1,bd=tol;
+      for(let k=a;k<=b;k++){const p=spiralPts[k],d=Math.hypot(p.x-INP.x,p.y-INP.y);if(d<bd){bd=d;best=k}}
+      if(best>S.spiral){if(Math.floor(best/20)>Math.floor(S.spiral/20))sfx('twinkle');S.spiral=best}
+      S.trail.push({x:INP.x,y:INP.y,t:S.time});
+    }
+    S.grow=lerp(S.grow,S.spiral/SPN,Math.min(1,dt*3));setRing(S.spiral/SPN);
+    if(S.spiral>=SPN*.95){setRing(0);finishGrow()}
+  }
+  else if(st==='growing'){S.grow=Math.min(1.25,S.grow+dt/1.4);setHint('🌟','圣诞树长好啦','星星正在点亮…','');if(S.grow>=1.25){sfx('star');enterDecorate()}}
+
+  if(S.stage==='decorate'){
+    const left=freeSlots().length,cam=INP.src==='hand'||S.camOn;
+    if(!S.holding){const sw=detectSwipe();if(sw)step(sw)}
+    setHint(S.holding?'🖐':'🤌',S.holding?'张开五指，放下礼物':(S.gifts.length?`再放一份礼物（还剩 ${left} 个位置）`:'五指聚拢，变出礼物'),
+      S.holding?'移动手，选一个发光的位置再松开':(cam?'食指朝上划一下可以换灯光 · 五指聚拢对着镜头，礼物就出现':'按住鼠标变出礼物，拖到发光的位置松开'),
+      S.gifts.length?'放好了，下一步 →':'',enterHeart);
+    if(!S.holding&&INP.pinch&&left>0&&INP.present){
+      if(S.usedStyles[S.nextStyle]){const n=S.usedStyles.indexOf(false);if(n>=0)S.nextStyle=n}
+      S.holding={style:S.nextStyle,x:INP.gx,y:INP.gy,born:S.time};sfx('pop');spark(INP.gx,INP.gy,'#fff1c1',16,1);
+    }
+    if(S.holding){
+      if(INP.present){S.lostT=0;S.holding.x=lerp(S.holding.x,INP.gx,.5);S.holding.y=lerp(S.holding.y,INP.gy,.5)}else S.lostT+=dt;
+      let best=-1,bd=1e9;for(const i of freeSlots()){const p=slotScreen(i),d=Math.hypot(p.x-S.holding.x,(p.y-S.holding.y)*.6);if(d<bd){bd=d;best=i}}
+      if(best!==S.hoverSlot&&best>=0)sfx('tick');S.hoverSlot=best;
+      if(INP.present&&(INP.src==='mouse'?!mouse.down:INP.open)&&S.time-S.holding.born>.25){
+        const g={slot:best,style:S.holding.style,fx:S.holding.x,fy:S.holding.y,t:0};S.gifts.push(g);S.usedStyles[g.style]=true;
+        const n=S.usedStyles.indexOf(false);if(n>=0)S.nextStyle=n;S.holding=null;S.hoverSlot=-1;lastSwipe=S.time;updateTray();sfx('drop');
+      }else if(S.lostT>1.2){spark(S.holding.x,S.holding.y,'#fff',20,1);S.holding=null;S.hoverSlot=-1}
+    }
+    if(S.gifts.length>=5&&S.gifts.every(g=>g.t>.8)){S.allDoneT=(S.allDoneT||0)+dt;if(S.allDoneT>.8)enterHeart()}
+    if(INP.src==='hand'&&!S.holding){S.wand.x=INP.x;S.wand.y=INP.y}
+  }
+  if(S.stage==='decorate'){if(S.wand.mode==='hand'&&S.stage==='decorate')S.wand.alpha=S.holding?.0:Math.min(S.wand.alpha,.9)}
+  if(S.stage==='heart'){
+    setHint('🫶','双手比心','两手的拇指和食指尖碰在一起，比一个大大的心','比心 🫶',startSanta);
+    if(INP.heart)S.heartHold+=dt;else S.heartHold=Math.max(0,S.heartHold-dt);setRing(S.heartHold/.7);
+    if(S.heartHold>=.7){setRing(0);startSanta()}
+  }
+  if(S.stage==='heartburst'&&S.time-S.burstT>1.05)launchSanta();
+  if(S.stage==='santa')santaUpdate(dt);
+  for(const g of S.gifts)g.t+=dt;
+}
+
+// ============ 绘制 ============
+function drawSpiralGuide(){
+  const t=S.time,prog=S.spiral;ctx.globalCompositeOperation='lighter';
+  for(let k=0;k<=SPN;k+=2){const p=spiralPts[k],done=k<=prog;
+    if(done){ctx.globalAlpha=.9;const s=12;ctx.drawImage(sprite('#ffd77a','glow'),p.x-s/2,p.y-s/2,s,s)}
+    else{const ahead=k-prog<SPN*.12;ctx.globalAlpha=(p.z>0?.42:.14)*(ahead?1.4:1)*(.7+.3*Math.sin(t*4-k*.15));const s=ahead?7:5;ctx.drawImage(sprite('#fff1c8','dot'),p.x-s/2,p.y-s/2,s,s)}}
+  ctx.globalCompositeOperation='source-over';ctx.globalAlpha=1;
+  // 起点
+  if(prog<6){const p=spiralPts[0],r=14+6*Math.sin(t*5);ctx.save();ctx.strokeStyle='rgba(255,215,122,.9)';ctx.lineWidth=2.5;ctx.beginPath();ctx.arc(p.x,p.y,r,0,7);ctx.stroke();
+    ctx.fillStyle='rgba(255,235,190,.9)';ctx.font='13px sans-serif';ctx.textAlign='center';ctx.fillText('从这里开始，往上绕',p.x,p.y+34);ctx.restore()}
+  // 方向箭头
+  for(let k=Math.ceil((prog+8)/22)*22;k<Math.min(SPN,prog+SPN*.4);k+=22){const a=spiralPts[k],b=spiralPts[Math.min(SPN,k+2)],ang=Math.atan2(b.y-a.y,b.x-a.x);
+    ctx.save();ctx.translate(a.x,a.y);ctx.rotate(ang);ctx.globalAlpha=a.z>0?.7:.3;ctx.fillStyle='#ffd77a';ctx.beginPath();ctx.moveTo(7,0);ctx.lineTo(-4,-5);ctx.lineTo(-4,5);ctx.fill();ctx.restore()}
+  // 幽灵仙女棒示范
+  if(!S.autoSpiral&&(!INP.present||!INP.pointerOk||prog<4)){const g=Math.min(SPN,Math.floor(prog+((t*.4)%1)*SPN*.35)),p=spiralPts[g];drawWand(p.x,p.y,.9,.65,.35)}
+}
+function drawTrail(){
+  const now=S.time;while(S.trail.length&&now-S.trail[0].t>.9)S.trail.shift();if(S.trail.length<2)return;
+  ctx.save();ctx.globalCompositeOperation='lighter';ctx.lineCap='round';ctx.lineJoin='round';
+  for(let i=1;i<S.trail.length;i++){const a=S.trail[i-1],b=S.trail[i],k=1-(now-b.t)/.9;ctx.strokeStyle=`rgba(255,215,122,${k*.8})`;ctx.lineWidth=2+k*6;ctx.beginPath();ctx.moveTo(a.x,a.y);ctx.lineTo(b.x,b.y);ctx.stroke()}
+  ctx.restore();
+}
+function drawSlots(){
+  if(S.stage!=='decorate')return;const t=S.time;
+  for(const i of freeSlots()){const p=slotScreen(i),on=i===S.hoverSlot,r=p.s*.32*(on?1.15+.08*Math.sin(t*6):1);
+    ctx.save();ctx.translate(p.x,p.y);ctx.scale(1,.32);ctx.strokeStyle=on?'rgba(255,225,140,.95)':'rgba(255,225,140,.35)';ctx.lineWidth=on?4:2;ctx.setLineDash(on?[]:[5,7]);ctx.beginPath();ctx.arc(0,0,r,0,7);ctx.stroke();
+    if(on){const g=ctx.createRadialGradient(0,0,0,0,0,r);g.addColorStop(0,'rgba(255,215,122,.45)');g.addColorStop(1,'rgba(255,215,122,0)');ctx.fillStyle=g;ctx.fill()}ctx.restore();
+    if(on&&S.holding)drawGift(S.holding.style,p.x,p.y,giftU(i),.3+.1*Math.sin(t*6));
+  }
+}
+function drawGifts(){
+  const list=S.gifts.slice().sort((a,b)=>slotWorld(a.slot).z-slotWorld(b.slot).z);
+  for(const g of list){const p=slotScreen(g.slot),u=giftU(g.slot),k=clamp(g.t/.55,0,1);
+    if(k<1){const e=easeOut(k),x=lerp(g.fx,p.x,e),y=lerp(g.fy,p.y,k*k)-Math.sin(k*Math.PI)*60,uu=lerp(u*1.1,u,e);drawGift(g.style,x,y,uu)}
+    else{if(!g.landed){g.landed=true;for(let i=0;i<24;i++)spark(p.x+rand(-u*.3,u*.3),p.y-u*.2,i%2?'#ffd77a':'#fff',1,1.1)}
+      const sq=g.t<.8?1+Math.sin((g.t-.55)*30)*.06*(1-(g.t-.55)/.25):1;ctx.save();ctx.translate(p.x,p.y);ctx.scale(1/sq,sq);drawGift(g.style,0,0,u);ctx.restore()}
+  }
+}
+function drawHeld(){
+  if(!S.holding)return;const h=S.holding,k=easeOut(clamp((S.time-h.born)/.5,0,1)),u=giftU(2)*1.1;
+  ctx.save();ctx.globalCompositeOperation='lighter';const gs=u*1.6;ctx.globalAlpha=.4*k;ctx.drawImage(sprite('#ffd77a','glow'),h.x-gs/2,h.y-gs*.6,gs,gs);ctx.restore();
+  drawGift(h.style,h.x,h.y+u*.25+Math.sin(S.time*4)*3,u,1,k);if(Math.random()<.4)spark(h.x+rand(-u*.3,u*.3),h.y,'#fff1c1',1,.5,.7);
+}
+// 粒子爱心：实心亮点勾边 + 虚的闪烁粒子填充；比心越久越亮、越聚拢
+const HEART=(()=>{const edge=[];for(let i=0;i<150;i++){const a=i/150*Math.PI*2;edge.push({x:Math.pow(Math.sin(a),3),y:-(13*Math.cos(a)-5*Math.cos(2*a)-2*Math.cos(3*a)-Math.cos(4*a))/16,edge:1,ph:Math.random()*7,c:Math.random()<.25?'#ffd77a':'#ff6f91'})}
+  const inside=(x,y)=>{let c=false;for(let i=0,j=edge.length-1;i<edge.length;j=i++){const a=edge[i],b=edge[j];if((a.y>y)!==(b.y>y)&&x<(b.x-a.x)*(y-a.y)/(b.y-a.y)+a.x)c=!c}return c};
+  const pts=edge.slice();let n=0;while(n<260){const x=rand(-1,1),y=rand(-.8,1.1);if(inside(x,y)){pts.push({x,y,edge:0,ph:Math.random()*7,c:Math.random()<.2?'#ffffff':(Math.random()<.5?'#ff9ab6':'#ff6f91')});n++}}return pts})();
+let heartView={cx:0,cy:0,s:1};const heartBurst=[];
+function burstHeart(){const {cx,cy,s}=heartView;
+  for(const p of HEART){const x=cx+p.x*s,y=cy+p.y*s,a=Math.atan2(p.y-.1,p.x)+rand(-.35,.35),v=rand(160,420)*(p.edge?1.15:.8);heartBurst.push({x,y,vx:Math.cos(a)*v,vy:Math.sin(a)*v-rand(30,110),life:0,max:rand(.9,1.5),c:p.c,sz:p.edge?rand(7,10):rand(4,7)})}
+  for(let i=0;i<70;i++)spark(cx+rand(-s*.4,s*.4),cy+rand(-s*.3,s*.3),['#ffd77a','#ff6f91','#ffffff','#ffb3c6'][i%4],1,2.2,1.2)}
+function drawHeartGuide(dt=1/60){
+  const t=S.time;
+  if(S.stage==='heart'){
+    const k=clamp(S.heartHold/.7,0,1),s=Math.min(W,H)*.105*(1+.04*Math.sin(t*3))*(1-.12*k),cx=W/2,cy=H*.17;heartView={cx,cy,s};
+    ctx.globalCompositeOperation='lighter';
+    const halo=s*3.2*(.6+.4*k);ctx.globalAlpha=.10+.22*k;ctx.drawImage(sprite('#ff6f91','glow'),cx-halo/2,cy-halo/2+s*.15,halo,halo);
+    for(const p of HEART){const tw=.5+.5*Math.sin(t*3.2+p.ph),drift=(1-k)*s*.06;
+      const x=cx+p.x*s+Math.sin(t*1.3+p.ph)*drift,y=cy+p.y*s+Math.cos(t*1.1+p.ph*1.3)*drift;
+      ctx.globalAlpha=(p.edge?.6+.35*tw:.18+.4*tw)*(.45+.55*k);const z=(p.edge?7.5:4.5)*(1+.35*k)*(.75+.35*tw)*Math.max(.7,Math.min(W,H)/800);
+      ctx.drawImage(sprite(p.c,'glow'),x-z/2,y-z/2,z,z)}
+    ctx.globalCompositeOperation='source-over';ctx.globalAlpha=1;
+  }
+  if(heartBurst.length){ctx.globalCompositeOperation='lighter';
+    for(let i=heartBurst.length-1;i>=0;i--){const p=heartBurst[i];p.life+=dt;if(p.life>p.max){heartBurst.splice(i,1);continue}
+      p.vx*=.975;p.vy=p.vy*.975+150*dt;p.x+=p.vx*dt;p.y+=p.vy*dt;const k=1-p.life/p.max;
+      ctx.globalAlpha=k*(.7+.3*Math.sin(p.life*30+i));const z=p.sz*(.6+.6*k);ctx.drawImage(sprite(p.c,'glow'),p.x-z/2,p.y-z/2,z,z)}
+    ctx.globalCompositeOperation='source-over';ctx.globalAlpha=1}
+}
+
+let last=performance.now();
+function frame(now){
+  const dt=Math.min(.05,(now-last)/1000);last=now;
+  update(dt);
+  ctx.setTransform(DPR,0,0,DPR,0,0);ctx.globalAlpha=1;ctx.globalCompositeOperation='source-over';
+  ctx.drawImage(bg,0,0,W,H);
+  const _low=ctx;ctx=window.__up;ctx.setTransform(DPR,0,0,DPR,0,0);ctx.globalAlpha=1;ctx.globalCompositeOperation='source-over';ctx.clearRect(0,0,W,H);drawOccluder();
+  santaDraw(false);
+  drawSlots();
+  drawTree();
+  drawGifts();
+  if(S.stage==='spiral')drawSpiralGuide();
+  drawTrail();
+  drawText(dt);
+  santaDraw(true);
+  drawHeartGuide(dt);
+  drawHeld();
+  const w=S.wand;if(w.mode!=='none'&&!(S.stage==='decorate'&&S.holding))drawWand(w.x,w.y,w.ang,Math.min(W,H)/900,w.alpha);
+  if((S.stage==='select'||S.stage==='decorate'&&!S.holding)&&INP.src==='hand'&&INP.pointUp){ctx.save();ctx.globalCompositeOperation='lighter';ctx.globalAlpha=.8;const s=34;ctx.drawImage(sprite('#ffd77a','glow'),INP.x-s/2,INP.y-s/2,s,s);
+    ctx.globalCompositeOperation='source-over';ctx.fillStyle='rgba(255,230,170,.85)';ctx.font='20px sans-serif';ctx.textAlign='center';ctx.textBaseline='middle';ctx.fillText('‹',INP.x-30,INP.y);ctx.fillText('›',INP.x+30,INP.y);ctx.restore()}
+  else if(S.stage==='select'&&INP.src==='hand'&&INP.present){ctx.save();ctx.globalCompositeOperation='lighter';ctx.globalAlpha=.5;const s=24;ctx.drawImage(sprite('#ffd77a','glow'),INP.x-s/2,INP.y-s/2,s,s);ctx.restore()}
+  drawSparks(dt);drawSnow(dt);
+  ctx=_low;cardLive(dt);
+  requestAnimationFrame(frame);
+}
+
+// ============ 贺卡 ============
+function snapAll(){const c=document.createElement('canvas');c.width=cv.width;c.height=cv.height;const x=c.getContext('2d');x.drawImage(cv,0,0);x.drawImage(upc,0,0);x.drawImage(fxc,0,0);return c}
+function buildCard(){
+  const c=$('cardImg'),CW=1080,CH=1500;const g=c.getContext('2d'),th=THEMES[S.theme];
+  const bgG=g.createLinearGradient(0,0,0,CH);bgG.addColorStop(0,th.sky[1]);bgG.addColorStop(1,'#05060c');g.fillStyle=bgG;g.fillRect(0,0,CW,CH);
+  const top=Math.max(0,textBox.y-textBox.size*.85),gy=Math.min(H,proj(0,-1.28,0).y+H*.06),ch=gy-top;
+  const cw=Math.min(W,Math.max((textBox.x1-textBox.x0)*1.08,ch*960/1060)),fit=Math.min(960/cw,1060/ch),dw=cw*fit,dh=ch*fit;
+  g.save();roundRect(g,60,60,960,1060,28);g.clip();const sg=g.createLinearGradient(0,60,0,1120);sg.addColorStop(0,th.sky[0]);sg.addColorStop(1,th.sky[1]);g.fillStyle=sg;g.fillRect(60,60,960,1060);
+  for(const L of [cv,upc,fxc])g.drawImage(L,(W/2-cw/2)*DPR,top*DPR,cw*DPR,ch*DPR,60+(960-dw)/2,60+(1060-dh)/2,dw,dh);g.restore();
+  g.strokeStyle='#e9c46a';g.lineWidth=4;roundRect(g,60,60,960,1060,28);g.stroke();g.lineWidth=1.5;g.globalAlpha=.6;roundRect(g,40,40,1000,1420,40);g.stroke();g.globalAlpha=1;
+  g.fillStyle='#ffd77a';g.textAlign='center';g.font='64px "Great Vibes",cursive';g.fillText('To '+($('toName').value||'亲爱的你'),CW/2,1210);
+  g.font='30px "PingFang SC","Microsoft YaHei",sans-serif';g.fillStyle='#fff3dc';g.fillText('愿你的每一个愿望，都像这棵树上的灯一样被点亮。',CW/2,1275);
+  g.font='24px "PingFang SC","Microsoft YaHei",sans-serif';g.fillStyle='rgba(255,243,220,.7)';
+  g.fillText(`${th.name}的树 · ${LIGHTS[S.light].name} · ${S.gifts.length} 份礼物`,CW/2,1330);
+  g.fillStyle='#ffd77a';g.font='44px "Great Vibes",cursive';g.fillText('From '+($('fromName').value||'Santa'),CW/2,1405);
+  g.font='20px sans-serif';g.fillStyle='rgba(255,243,220,.5)';g.fillText('Christmas '+new Date().getFullYear(),CW/2,1440);
+  return c;
+}
+function roundRect(g,x,y,w,h,r){g.beginPath();g.moveTo(x+r,y);g.arcTo(x+w,y,x+w,y+h,r);g.arcTo(x+w,y+h,x,y+h,r);g.arcTo(x,y+h,x,y,r);g.arcTo(x,y,x+w,y,r);g.closePath()}
+let cardCanvas=null;
+function showCard(){cardCanvas=buildCard();$('card').classList.remove('hide');S.cardT=0;sfx('star')}
+function cardLive(dt){if(!cardCanvas||$('card').classList.contains('hide')){S.cardSpin=Math.max(0,(S.cardSpin||0)-dt*1.5);return}S.cardT=(S.cardT||0)+dt;S.cardSpin=Math.min(1,(S.cardSpin||0)+dt*.8);S.cardAcc=(S.cardAcc||0)+dt;if(S.cardAcc>=1/30){S.cardAcc=0;buildCard()}}
+const refreshCard=()=>{if(!cardCanvas)return;buildCard()};
+$('toName').addEventListener('input',refreshCard);$('fromName').addEventListener('input',refreshCard);
+$('saveCard').onclick=()=>{try{const a=document.createElement('a');a.href=cardCanvas.toDataURL('image/png');a.download='我的圣诞贺卡.png';document.body.appendChild(a);a.click();a.remove()}catch(e){}};
+$('closeCard').onclick=()=>$('card').classList.add('hide');
+$('againBtn').onclick=()=>{$('card').classList.add('hide');reset()};
+function reset(){
+  if(window.__santa3d)window.__santa3d.reset();window.__occ=0;$('steps').style.opacity='';heartBurst.length=0;
+  Object.assign(S,{stage:'select',grow:0,grew:false,holdPoint:0,circleSum:0,lastA:null,trail:[],gifts:[],holding:null,hoverSlot:-1,nextStyle:0,usedStyles:[false,false,false,false,false],heartHold:0,santa:null,cardShown:false,allDoneT:0,spiral:0,autoSpiral:false,textMorph:0});
+  S.wand={mode:'none',x:0,y:0,ang:.8,alpha:0};for(const p of textPts)p.on=-1;
+  document.querySelector('.ptab[data-mode=light]').hidden=true;$('tray').classList.add('hide');$('picker').classList.remove('hide');setPickMode('tree');setStepUI(0);hintKey='';
+}
+$('resetBtn').onclick=()=>{if(S.stage!=='intro'){$('card').classList.add('hide');reset()}};
+
+// ============ 声音 ============
+let AC=null;
+function initAudio(){try{AC=AC||new (window.AudioContext||window.webkitAudioContext)();AC.resume()}catch(e){}try{bgmStart()}catch(e){}}
+function tone(f,t0,dur,type='sine',vol=.12){const o=AC.createOscillator(),g=AC.createGain();o.type=type;o.frequency.value=f;g.gain.setValueAtTime(0,t0);g.gain.linearRampToValueAtTime(vol,t0+.01);g.gain.exponentialRampToValueAtTime(.0001,t0+dur);o.connect(g).connect(AC.destination);o.start(t0);o.stop(t0+dur+.05)}
+function sfx(n){if(!AC||S.muted)return;const t=AC.currentTime;
+  if(n==='tick')tone(1400,t,.06,'triangle',.04);
+  else if(n==='summon')[880,1175,1568,2093].forEach((f,i)=>tone(f,t+i*.06,.5,'sine',.08));
+  else if(n==='grow')[523,659,784,1047,1319,1568].forEach((f,i)=>tone(f,t+i*.25,1.2,'sine',.07));
+  else if(n==='star')[1568,2093,2637].forEach((f,i)=>tone(f,t+i*.08,1,'sine',.06));
+  else if(n==='pop')tone(660,t,.15,'triangle',.08),tone(990,t+.05,.2,'sine',.06);
+  else if(n==='drop')tone(330,t,.2,'sine',.1),tone(1320,t+.08,.5,'sine',.05);
+  else if(n==='heart')[523,659,784,1047].forEach(f=>tone(f,t,1.6,'sine',.06));
+  else if(n==='bell'){const f=rand(2400,3200);tone(f,t,.18,'square',.012);tone(f*1.5,t,.12,'sine',.02)}
+  else if(n==='twinkle')tone(rand(1800,3200),t,.15,'sine',.015);
+  else if(n==='pick')tone(1760,t,.3,'sine',.07);
+}
+$('muteBtn').onclick=()=>{S.muted=!S.muted;$('muteBtn').textContent=S.muted?'🔇':'🔊';initAudio();bgmApply()};
+// ============ 背景音乐 ============
+const BGM={on:false,el:null,mode:'',timer:0,next:0,i:0,gain:null};
+const idb=(fn)=>{try{const r=indexedDB.open('magic-tree',1);r.onupgradeneeded=()=>r.result.createObjectStore('kv');r.onsuccess=()=>{try{fn(r.result.transaction('kv','readwrite').objectStore('kv'))}catch(e){}}}catch(e){}};
+function bgmUseFile(src){if(BGM.el)BGM.el.pause();bgmSynthStop();const a=new Audio(src);a.loop=true;a.volume=.45;BGM.el=a;BGM.mode='file';bgmApply()}
+function bgmStart(){if(BGM.on)return;BGM.on=true;
+  idb(st=>{const q=st.get('bgm');q.onsuccess=()=>{if(q.result&&BGM.mode!=='file')bgmUseFile(URL.createObjectURL(q.result))}});   // 上次选过的音乐
+  const a=new Audio('bgm.mp3');a.loop=true;a.volume=.45;   // 和网页放在同一个文件夹的 bgm.mp3
+  a.addEventListener('canplay',()=>{if(BGM.mode!=='file'){BGM.el=a;BGM.mode='file';bgmSynthStop();bgmApply()}},{once:true});
+  a.addEventListener('error',()=>{});a.load();
+  setTimeout(()=>{if(!BGM.mode){BGM.mode='synth';bgmApply()}},700);
+}
+function bgmApply(){if(!BGM.on)return;const play=!S.muted;
+  if(BGM.mode==='file'&&BGM.el){play?BGM.el.play().catch(()=>{}):BGM.el.pause()}
+  if(BGM.mode==='synth'){play?bgmSynthStart():bgmSynthStop()}}
+// 《Jingle Bells》（1857 年，公有领域）副歌：音乐盒旋律 + 低音
+const JB=(()=>{const N={C3:130.81,D3:146.83,F3:174.61,G3:196,C4:261.63,D4:293.66,E4:329.63,F4:349.23,G4:392,A4:440,C5:523.25},m=[];
+  const A=[['E4',1],['E4',1],['E4',2],['E4',1],['E4',1],['E4',2],['E4',1],['G4',1],['C4',1.5],['D4',.5],['E4',4],['F4',1],['F4',1],['F4',1.5],['F4',.5],['F4',1],['E4',1],['E4',1],['E4',.5],['E4',.5]];
+  const B1=[['E4',1],['D4',1],['D4',1],['E4',1],['D4',2],['G4',2]],B2=[['G4',1],['G4',1],['F4',1],['D4',1],['C4',4]];
+  let t=0;for(const [n,d] of [...A,...B1,...A,...B2]){m.push({f:N[n],t,d});t+=d}
+  const bass=['C3','C3','C3','C3','F3','C3','D3','G3','C3','C3','C3','C3','F3','C3','G3','C3'].map((n,i)=>[{f:N[n],t:i*4,d:1.6},{f:N[n]*1.5,t:i*4+2,d:1.6}]).flat();
+  return {m,bass,len:t+2}})();
+function bell(f,t0,d,vol){const o=AC.createOscillator(),o2=AC.createOscillator(),g=AC.createGain();o.type='sine';o2.type='sine';o.frequency.value=f;o2.frequency.value=f*2.01;
+  g.gain.setValueAtTime(0,t0);g.gain.linearRampToValueAtTime(vol,t0+.008);g.gain.exponentialRampToValueAtTime(.0001,t0+Math.max(.5,d*1.6));
+  const g2=AC.createGain();g2.gain.value=.3;o.connect(g);o2.connect(g2).connect(g);g.connect(BGM.gain);o.start(t0);o2.start(t0);o.stop(t0+d*1.6+.6);o2.stop(t0+d*1.6+.6)}
+function bgmSynthStart(){if(!AC||BGM.timer)return;if(!BGM.gain){BGM.gain=AC.createGain();BGM.gain.gain.value=1;BGM.gain.connect(AC.destination)}
+  const beat=.3;BGM.next=Math.max(BGM.next,AC.currentTime+.1);
+  const sched=()=>{while(BGM.next<AC.currentTime+.6){const t0=BGM.next;for(const n of JB.m)bell(n.f*2,t0+n.t*beat,n.d*beat,.035);for(const n of JB.bass)bell(n.f,t0+n.t*beat,n.d*beat,.022);BGM.next+=JB.len*beat}};
+  sched();BGM.timer=setInterval(sched,250)}
+function bgmSynthStop(){if(BGM.timer){clearInterval(BGM.timer);BGM.timer=0}if(BGM.gain){BGM.gain.disconnect();BGM.gain=null}BGM.next=0}
+$('musicBtn').onclick=()=>$('musicFile').click();
+$('musicFile').onchange=e=>{const f=e.target.files[0];if(!f)return;initAudio();BGM.on=true;bgmUseFile(URL.createObjectURL(f));idb(st=>st.put(f,'bgm'))};
+
+// ============ 输入 ============
+cv.addEventListener('pointermove',e=>{mouse.x=e.clientX;mouse.y=e.clientY;mouse.inside=true;mouse.lastMove=S.time});
+cv.addEventListener('pointerdown',e=>{mouse.x=e.clientX;mouse.y=e.clientY;mouse.down=true;mouse.inside=true;mouse.lastMove=S.time;cv.setPointerCapture(e.pointerId)});
+addEventListener('pointerup',()=>{mouse.down=false});
+cv.addEventListener('pointerleave',()=>{mouse.inside=false});
+addEventListener('keydown',e=>{if(e.target.tagName==='INPUT')return;if(e.key==='ArrowLeft')step(-1);else if(e.key==='ArrowRight')step(1);else if(e.key===' '&&S.stage==='select')summonWand()});
+$('startCam').onclick=()=>{initAudio();startCamera()};
+$('startMouse').onclick=()=>begin(false);
+addEventListener('resize',()=>{resize();centerTrack()});
+
+resize();buildTree();paintThumbs();updateTray();
+if(document.fonts)document.fonts.load('80px "Great Vibes"').then(()=>layoutText()).catch(()=>{});
+requestAnimationFrame(frame);
+window.__site={S,proj,WAND_REST,headY,textPts:()=>textPts,textFront:()=>textFront,textBox:()=>textBox,textPen:()=>textPen,INP,detectSwipe,SW,BGM,step,showCard,sfx:n=>sfx(n)};
+}
+</script>
+<script type="importmap">{"imports":{"three":"https://cdn.jsdelivr.net/npm/three@0.170.0/build/three.module.js","three/addons/":"https://cdn.jsdelivr.net/npm/three@0.170.0/examples/jsm/"}}</script>
+<script type="module">
+// ================= 3D 毛绒圣诞老人（比心后出场）=================
+import * as THREE from 'three';
+import { RoomEnvironment } from 'three/addons/environments/RoomEnvironment.js';
+window.__furQ = window.__furQ || (matchMedia('(pointer: coarse)').matches ? .5 : 1);   // 手机上减少毛发层数
+const SantaLib = (() => {
+// 3D 卡通圣诞老人：全部由几何体搭建，毛绒部分用噪声顶点位移
+
+// ---------- 工具 ----------
+function hash(x, y, z) { const s = Math.sin(x * 127.1 + y * 311.7 + z * 74.7) * 43758.5453; return s - Math.floor(s); }
+function vnoise(x, y, z) {
+  const xi = Math.floor(x), yi = Math.floor(y), zi = Math.floor(z);
+  const xf = x - xi, yf = y - yi, zf = z - zi;
+  const u = xf * xf * (3 - 2 * xf), v = yf * yf * (3 - 2 * yf), w = zf * zf * (3 - 2 * zf);
+  const L = (a, b, t) => a + (b - a) * t;
+  const c = (i, j, k) => hash(xi + i, yi + j, zi + k);
+  return L(L(L(c(0,0,0), c(1,0,0), u), L(c(0,1,0), c(1,1,0), u), v),
+           L(L(c(0,0,1), c(1,0,1), u), L(c(0,1,1), c(1,1,1), u), v), w);
+}
+// 毛绒：沿法线做多层噪声位移（世界尺度噪声，接缝处不会裂开）
+function fluffy(geo, amp = 0.06, freq = 7, seed = 0) {
+  const pos = geo.attributes.position, nor = geo.attributes.normal, p = new THREE.Vector3(), n = new THREE.Vector3();
+  for (let i = 0; i < pos.count; i++) {
+    p.fromBufferAttribute(pos, i); n.fromBufferAttribute(nor, i);
+    const q = p.clone().multiplyScalar(freq).addScalar(seed);
+    const d = (vnoise(q.x, q.y, q.z) - .5) * 2 * amp + (vnoise(q.x * 2.7, q.y * 2.7, q.z * 2.7) - .5) * amp * .7 + amp * .4;
+    p.addScaledVector(n, d); pos.setXYZ(i, p.x, p.y, p.z);
+  }
+  geo.computeVertexNormals(); return geo;
+}
+const V = (x, y, z) => new THREE.Vector3(x, y, z);
+function mesh(geo, mat, x = 0, y = 0, z = 0, sx = 1, sy = 1, sz = 1) {
+  const m = new THREE.Mesh(geo, mat); m.position.set(x, y, z); m.scale.set(sx, sy, sz); m.castShadow = true; m.receiveShadow = true; return m;
+}
+// 沿曲线、半径渐变的管子（帽子、鹿角用）
+function taperTube(curve, r0, r1, seg = 48, radial = 24, power = 1) {
+  const pts = [], frames = curve.computeFrenetFrames(seg, false), pos = [], idx = [];
+  for (let i = 0; i <= seg; i++) {
+    const t = i / seg, c = curve.getPointAt(t), N = frames.normals[i], B = frames.binormals[i], r = r1 + (r0 - r1) * Math.pow(1 - t, power);
+    for (let j = 0; j <= radial; j++) {
+      const a = j / radial * Math.PI * 2, cx = Math.cos(a), sy = Math.sin(a);
+      pos.push(c.x + r * (cx * N.x + sy * B.x), c.y + r * (cx * N.y + sy * B.y), c.z + r * (cx * N.z + sy * B.z));
+    }
+  }
+  for (let i = 0; i < seg; i++) for (let j = 0; j < radial; j++) {
+    const a = i * (radial + 1) + j, b = a + radial + 1; idx.push(a, b, a + 1, b, b + 1, a + 1);
+  }
+  const g = new THREE.BufferGeometry(); g.setAttribute('position', new THREE.Float32BufferAttribute(pos, 3)); g.setIndex(idx); g.computeVertexNormals(); return g;
+}
+
+// ---------- 材质 ----------
+const MAT = {
+  red: new THREE.MeshPhysicalMaterial({ color: 0xc4121f, roughness: .62, sheen: 1, sheenColor: 0xff6a6a, sheenRoughness: .45 }),
+  fur: new THREE.MeshPhysicalMaterial({ color: 0xfbf7f0, roughness: .92, sheen: 1, sheenColor: 0xffffff, sheenRoughness: .6 }),
+  skin: new THREE.MeshPhysicalMaterial({ color: 0xf7bd98, roughness: .48, clearcoat: .15, clearcoatRoughness: .5, sheen: .4, sheenColor: 0xffb0a0 }),
+  cheek: new THREE.MeshPhysicalMaterial({ color: 0xf2877c, roughness: .45, clearcoat: .2 }),
+  nose: new THREE.MeshPhysicalMaterial({ color: 0xec7f72, roughness: .3, clearcoat: .6 }),
+  mouth: new THREE.MeshStandardMaterial({ color: 0x5a1416, roughness: .6 }),
+  tongue: new THREE.MeshStandardMaterial({ color: 0xe0676a, roughness: .5 }),
+  eyeW: new THREE.MeshPhysicalMaterial({ color: 0xffffff, roughness: .1, clearcoat: 1 }),
+  iris: new THREE.MeshPhysicalMaterial({ color: 0x4a2a14, roughness: .15, clearcoat: 1 }),
+  pupil: new THREE.MeshPhysicalMaterial({ color: 0x0c0705, roughness: .1, clearcoat: 1 }),
+  shine: new THREE.MeshBasicMaterial({ color: 0xffffff }),
+  black: new THREE.MeshPhysicalMaterial({ color: 0x1d1b1a, roughness: .32, clearcoat: .8 }),
+  gold: new THREE.MeshStandardMaterial({ color: 0xffc64a, metalness: 1, roughness: .22 }),
+  sleigh: new THREE.MeshPhysicalMaterial({ color: 0xb0101c, roughness: .25, clearcoat: 1, clearcoatRoughness: .08 }),
+  seat: new THREE.MeshPhysicalMaterial({ color: 0x5e0a12, roughness: .7, sheen: 1, sheenColor: 0xa03040 }),
+  sack: new THREE.MeshStandardMaterial({ color: 0x8a5a33, roughness: .9 }),
+  deer: new THREE.MeshPhysicalMaterial({ color: 0x8e5a32, roughness: .7, sheen: .8, sheenColor: 0xd9a070 }),
+  deerLight: new THREE.MeshPhysicalMaterial({ color: 0xe2c49c, roughness: .8, sheen: .8, sheenColor: 0xffffff }),
+  antler: new THREE.MeshStandardMaterial({ color: 0xead6ad, roughness: .55 }),
+  hoof: new THREE.MeshStandardMaterial({ color: 0x3a2a1f, roughness: .5 }),
+  deerNose: new THREE.MeshPhysicalMaterial({ color: 0x2a1a12, roughness: .2, clearcoat: 1 }),
+  strap: new THREE.MeshPhysicalMaterial({ color: 0xa3121c, roughness: .4, clearcoat: .6 }),
+  green: new THREE.MeshPhysicalMaterial({ color: 0x1f7a44, roughness: .4, clearcoat: .5 }),
+};
+
+// ---------- 圣诞老人 ----------
+function createSanta() {
+  const root = new THREE.Group(), M = MAT;
+  const fur = (geo, a = .05, f = 7, s = 0) => fluffy(geo, a, f, s);
+
+  // 身体（红色天鹅绒大衣）
+  root.add(mesh(new THREE.SphereGeometry(1, 64, 48), M.red, 0, 1.05, 0, 1.18, 1.08, 1.02));
+  root.add(mesh(fur(new THREE.TorusGeometry(.86, .2, 24, 96), .05, 8), M.fur, 0, .32, 0, 1.08, 1.0, 1).rotateX(Math.PI / 2));
+  // 门襟毛边
+  const strip = new THREE.CatmullRomCurve3([...Array(9)].map((_, i) => { const y = .35 + i * .19, dy = (y - 1.05) / 1.08; return V(0, y, Math.sqrt(Math.max(0, 1 - dy * dy)) * 1.02 + .02); }));
+  root.add(mesh(fur(new THREE.TubeGeometry(strip, 40, .13, 16), .022, 10, 3), M.fur, 0, 0, 0, 1.35, 1, 1));
+  // 腰带 + 金扣
+  root.add(mesh(new THREE.TorusGeometry(1, .1, 16, 96), M.black, 0, .78, 0, 1.15, 1.03, 1.6).rotateX(Math.PI / 2));
+  const buckle = new THREE.Group(); buckle.position.set(0, .78, 1.02);
+  buckle.add(mesh(new THREE.BoxGeometry(.42, .34, .06), M.gold)); buckle.add(mesh(new THREE.BoxGeometry(.26, .18, .08), M.black, 0, 0, .01));
+  root.add(buckle);
+
+  // 头
+  const head = new THREE.Group(); head.position.set(0, 2.35, 0); root.add(head);
+  head.add(mesh(new THREE.SphereGeometry(.8, 64, 48), M.skin, 0, 0, 0, 1, .98, .95));
+  head.add(mesh(new THREE.SphereGeometry(.15, 24, 16), M.skin, -.79, -.02, 0, .5, 1, .8));
+  head.add(mesh(new THREE.SphereGeometry(.15, 24, 16), M.skin, .79, -.02, 0, .5, 1, .8));
+  // 腮红
+  for (const s of [-1, 1]) head.add(mesh(new THREE.SphereGeometry(.22, 32, 24), M.cheek, s * .44, -.15, .57, 1, .8, .66));
+  // 鼻子
+  head.add(mesh(new THREE.SphereGeometry(.19, 32, 24), M.nose, 0, -.08, .8, 1.05, .92, .95));
+  // 眼睛（大而亮，带高光）
+  const eyes = [];
+  for (const s of [-1, 1]) {
+    const e = new THREE.Group(); e.position.set(s * .28, .1, .66); e.rotation.y = s * .32; head.add(e);
+    e.add(mesh(new THREE.SphereGeometry(.15, 32, 24), M.eyeW, 0, 0, 0, .95, 1.15, .55));
+    e.add(mesh(new THREE.SphereGeometry(.095, 32, 24), M.iris, 0, -.005, .065, 1, 1.08, .5));
+    e.add(mesh(new THREE.SphereGeometry(.055, 24, 16), M.pupil, 0, -.005, .095, 1, 1.05, .4));
+    e.add(mesh(new THREE.SphereGeometry(.026, 16, 12), M.shine, .035, .045, .118));
+    e.add(mesh(new THREE.SphereGeometry(.012, 12, 8), M.shine, -.03, -.03, .115));
+    // 上眼睑（笑眯眯）
+    const lid = mesh(new THREE.SphereGeometry(.165, 32, 16, 0, Math.PI * 2, 0, Math.PI * .42), M.skin, 0, .0, 0, 1, 1.2, .62);
+    lid.rotation.x = -.25; e.add(lid); eyes.push({ g: e, lid });
+  }
+  // 眉毛
+  for (const s of [-1, 1]) { const b = mesh(fur(new THREE.CapsuleGeometry(.085, .26, 8, 16), .03, 14, s + 5), M.fur, s * .3, .33, .66); b.rotation.z = Math.PI / 2 - s * .22; b.rotation.y = s * .35; head.add(b); }
+  // 嘴（张开的笑）
+  head.add(mesh(new THREE.SphereGeometry(.2, 32, 24), M.mouth, 0, -.43, .74, 1, .55, .45));
+  head.add(mesh(new THREE.SphereGeometry(.12, 24, 16), M.tongue, 0, -.48, .8, 1, .42, .4));
+  // 胡子：大团毛绒
+  head.add(mesh(fur(new THREE.SphereGeometry(1, 72, 56), .045, 6, 1), M.fur, 0, -1.0, .28, 1.0, .78, .66));
+  for (const s of [-1, 1]) head.add(mesh(fur(new THREE.SphereGeometry(1, 40, 32), .04, 6, s + 2), M.fur, s * .6, -.42, .2, .3, .55, .42));
+  // 八字胡
+  for (const s of [-1, 1]) {
+    const m = mesh(fur(new THREE.SphereGeometry(1, 40, 32), .05, 7, s + 9), M.fur, s * .25, -.27, .78, .34, .15, .2); m.rotation.z = -s * .28; head.add(m);
+    const tip = mesh(fur(new THREE.SphereGeometry(1, 24, 16), .04, 9, s + 11), M.fur, s * .55, -.2, .68, .14, .1, .12); tip.rotation.z = -s * .9; head.add(tip);
+  }
+  // 后脑头发
+  for (const [x, y, z, r] of [[-.7, -.05, -.15, .3], [.7, -.05, -.15, .3], [-.45, .0, -.55, .34], [.45, .0, -.55, .34], [0, .02, -.72, .34]]) head.add(mesh(fur(new THREE.SphereGeometry(r, 32, 24), .04, 9, x * 7), M.fur, x, y, z));
+  // 帽子
+  const hatCurve = new THREE.CubicBezierCurve3(V(0, .5, -.05), V(0, 1.25, -.2), V(-.15, 1.6, -.85), V(.35, 1.15, -1.25));
+  head.add(mesh(taperTube(hatCurve, .8, .05, 60, 40, .85), M.red));
+  const brim = mesh(fur(new THREE.TorusGeometry(.8, .21, 28, 96), .06, 7, 4), M.fur, 0, .48, -.04, 1.02, 1, .98); brim.rotation.x = Math.PI / 2 - .1; head.add(brim);
+  head.add(mesh(fur(new THREE.SphereGeometry(.25, 40, 32), .06, 9, 7), M.fur, .38, 1.12, -1.28));
+
+  // 手臂（肩 → 肘 → 手），s=-1 右臂 / +1 左臂
+  function arm(s) {
+    const sh = new THREE.Group(); sh.position.set(s * 1.0, 1.55, .05); root.add(sh);
+    sh.add(mesh(new THREE.SphereGeometry(.3, 32, 24), M.red));
+    sh.add(mesh(new THREE.CapsuleGeometry(.26, .55, 12, 24), M.red, 0, -.42, 0));
+    const el = new THREE.Group(); el.position.set(0, -.85, 0); sh.add(el);
+    el.add(mesh(new THREE.CapsuleGeometry(.23, .5, 12, 24), M.red, 0, -.32, 0));
+    el.add(mesh(fur(new THREE.TorusGeometry(.24, .11, 16, 48), .03, 10, s), M.fur, 0, -.66, 0).rotateX(Math.PI / 2));
+    const hand = new THREE.Group(); hand.position.set(0, -.86, 0); el.add(hand);
+    hand.add(mesh(new THREE.SphereGeometry(.25, 32, 24), M.black, 0, -.05, 0, 1, 1.15, .82));
+    hand.add(mesh(new THREE.CapsuleGeometry(.08, .14, 8, 16), M.black, -s * .2, .02, .1).rotateZ(s * .7));
+    return { sh, el, hand };
+  }
+  const armR = arm(-1), armL = arm(1);
+  // 腿（坐姿）
+  for (const s of [-1, 1]) {
+    root.add(mesh(new THREE.CapsuleGeometry(.3, .6, 12, 24), M.red, s * .45, .32, .55).rotateX(Math.PI / 2));
+    root.add(mesh(new THREE.CapsuleGeometry(.26, .45, 12, 24), M.black, s * .45, -.15, 1.05));
+    root.add(mesh(new THREE.SphereGeometry(.3, 24, 16), M.black, s * .45, -.52, 1.2, .9, .6, 1.3));
+  }
+
+  // 姿势
+  const R = THREE.MathUtils.degToRad;
+  function pose(name, t = 0) {
+    head.rotation.set(0, 0, 0); root.rotation.set(0, 0, 0);
+    for (const e of eyes) e.lid.rotation.x = -.25;
+    const set = (a, sh, el, hd = [0, 0, 0]) => { a.sh.rotation.set(R(sh[0]), R(sh[1]), R(sh[2])); a.el.rotation.set(R(el[0]), R(el[1]), R(el[2])); a.hand.rotation.set(R(hd[0]), R(hd[1]), R(hd[2])); };
+    if (name === 'reins') { set(armR, [-55, 0, -12], [-40, 0, 0]); set(armL, [-55, 0, 12], [-40, 0, 0]); }
+    else if (name === 'wave') { // 右手举到脸旁挥手
+      set(armL, [-50, 0, 10], [-50, 0, 0]);
+      set(armR, [-20, 0, -150 + Math.sin(t * 9) * 12], [0, 0, -35 + Math.sin(t * 9) * 15], [0, 0, 0]);
+      head.rotation.set(R(-6), R(8), R(6)); for (const e of eyes) e.lid.rotation.x = -.05;
+    }
+    else if (name === 'reach') { // 伸手向前抓仙女棒
+      set(armL, [-50, 0, 10], [-50, 0, 0]);
+      set(armR, [-95, -20, -25], [-10, 0, 0], [10, 0, 0]);
+      head.rotation.set(R(5), R(-12), 0);
+    }
+    else if (name === 'write') { // 举起仙女棒在空中写字
+      set(armL, [-55, 0, 12], [-40, 0, 0]);
+      set(armR, [-150, 0, -30 + Math.sin(t * 6) * 10], [-20, 0, 0], [0, 0, 0]);
+      head.rotation.set(R(-15), R(-15), 0);
+    }
+    else if (name === 'byeback') { set(armL, [-55, 0, 12], [-40, 0, 0]); set(armR, [-20, 0, -160 + Math.sin(t * 9) * 12], [0, 0, -30], [0, 0, 0]); head.rotation.set(0, R(-25), 0); }
+  }
+  pose('reins');
+  return { root, head, armR, armL, pose };
+}
+
+// ---------- 雪橇 ----------
+function createSleigh() {
+  const g = new THREE.Group(), M = MAT;
+  const sh = new THREE.Shape();
+  sh.moveTo(-1.7, 0); sh.lineTo(1.4, 0); sh.quadraticCurveTo(2.45, 0, 2.3, .95); sh.quadraticCurveTo(2.15, 1.65, 1.65, 1.3);
+  sh.lineTo(1.2, .95); sh.lineTo(-1.15, .95); sh.lineTo(-1.45, 2.25); sh.quadraticCurveTo(-1.7, 2.75, -2.05, 2.35); sh.lineTo(-2.0, .3); sh.quadraticCurveTo(-2.0, 0, -1.7, 0);
+  const body = new THREE.ExtrudeGeometry(sh, { depth: 2.5, bevelEnabled: true, bevelThickness: .12, bevelSize: .1, bevelSegments: 6, curveSegments: 32 });
+  body.rotateY(-Math.PI / 2); body.translate(1.25, 0, 0);
+  g.add(mesh(body, M.sleigh));
+  g.add(mesh(new THREE.BoxGeometry(2.3, .35, 2.0), M.seat, 0, .95, -.35));
+  g.add(mesh(new THREE.BoxGeometry(2.3, 1.2, .3), M.seat, 0, 1.6, -1.45).rotateX(-.15));
+  // 金色描边
+  for (const x of [-1.37, 1.37]) {
+    const c = new THREE.CatmullRomCurve3([V(x, .05, -1.95), V(x, 1.9, -1.75), V(x, 2.4, -1.85), V(x, 2.25, -2.1)]);
+    g.add(mesh(new THREE.TubeGeometry(c, 40, .06, 12), M.gold));
+    const c2 = new THREE.CatmullRomCurve3([V(x, .95, -1.1), V(x, .97, 1.15), V(x, 1.3, 1.7), V(x, 1.6, 2.0), V(x, 1.15, 2.35), V(x, .4, 2.3)]);
+    g.add(mesh(new THREE.TubeGeometry(c2, 60, .06, 12), M.gold));
+    // 侧面金色卷草装饰
+    const sw = new THREE.CatmullRomCurve3([...Array(20)].map((_, i) => { const a = i / 19 * Math.PI * 3.2; const r = .45 - i * .019; return V(x * 1.04, .5 + Math.sin(a) * r * .6, -.2 + Math.cos(a) * r); }));
+    g.add(mesh(new THREE.TubeGeometry(sw, 80, .035, 8), M.gold));
+  }
+  // 滑板
+  for (const x of [-1.05, 1.05]) {
+    const c = new THREE.CatmullRomCurve3([V(x, -.55, -2.1), V(x, -.6, -1), V(x, -.6, 1.6), V(x, -.45, 2.7), V(x, .2, 3.05), V(x, .55, 2.8), V(x, .4, 2.55)]);
+    g.add(mesh(new THREE.TubeGeometry(c, 80, .08, 16), M.gold));
+    for (const z of [-1.4, 0, 1.3]) g.add(mesh(new THREE.CylinderGeometry(.05, .05, .6, 12), M.gold, x, -.3, z));
+  }
+  // 礼物袋 + 礼物
+  g.add(mesh(fluffy(new THREE.SphereGeometry(1, 48, 32), .08, 3, 2), M.sack, 0, 1.75, -1.0, .85, 1.0, .7));
+  return g;
+}
+
+// ---------- 驯鹿 ----------
+function createReindeer(seed = 0) {
+  const g = new THREE.Group(), M = MAT, legs = [];
+  g.add(mesh(new THREE.CapsuleGeometry(.48, 1.3, 16, 32), M.deer, 0, 1.6, 0).rotateX(Math.PI / 2));
+  g.add(mesh(new THREE.CapsuleGeometry(.36, 1.0, 16, 32), M.deerLight, 0, 1.38, .05).rotateX(Math.PI / 2));
+  const neck = mesh(new THREE.CapsuleGeometry(.24, .7, 12, 24), M.deer, 0, 2.15, 1.0); neck.rotation.x = .65; g.add(neck);
+  g.add(mesh(fluffy(new THREE.SphereGeometry(.3, 32, 24), .05, 8, seed), M.deerLight, 0, 2.0, 1.25, 1, 1.1, .8));
+  const head = new THREE.Group(); head.position.set(0, 2.65, 1.35); g.add(head);
+  head.add(mesh(new THREE.SphereGeometry(.34, 40, 32), M.deer, 0, 0, 0, .9, .88, 1.1));
+  head.add(mesh(new THREE.SphereGeometry(.24, 32, 24), M.deerLight, 0, -.1, .3, 1, .8, 1));
+  head.add(mesh(new THREE.SphereGeometry(.09, 24, 16), M.deerNose, 0, -.02, .53));
+  for (const s of [-1, 1]) {
+    head.add(mesh(new THREE.SphereGeometry(.075, 20, 16), M.pupil, s * .2, .1, .2));
+    head.add(mesh(new THREE.SphereGeometry(.022, 12, 8), M.shine, s * .2 + .02, .13, .265));
+    const ear = mesh(new THREE.SphereGeometry(.12, 20, 16), M.deer, s * .32, .2, -.05, .45, 1, .25); ear.rotation.z = -s * 1.0; head.add(ear);
+    // 鹿角
+    const main = new THREE.CatmullRomCurve3([V(s * .15, .25, -.08), V(s * .32, .7, -.2), V(s * .42, 1.1, -.45), V(s * .38, 1.35, -.75)]);
+    head.add(mesh(taperTube(main, .06, .025, 30, 12), M.antler));
+    for (const [t, dx, dy, dz] of [[.4, .05, .35, .25], [.65, .25, .3, .05], [.85, .02, .25, .2]]) {
+      const p = main.getPointAt(t), c = new THREE.CatmullRomCurve3([p, V(p.x + s * dx * .5, p.y + dy * .6, p.z + dz * .5), V(p.x + s * dx, p.y + dy, p.z + dz)]);
+      head.add(mesh(taperTube(c, .04, .018, 12, 10), M.antler));
+    }
+  }
+  // 腿
+  for (const [x, z] of [[-.28, .6], [.28, .6], [-.28, -.65], [.28, -.65]]) {
+    const hip = new THREE.Group(); hip.position.set(x, 1.4, z); g.add(hip);
+    hip.add(mesh(new THREE.CapsuleGeometry(.14, .5, 8, 16), M.deer, 0, -.35, 0));
+    const knee = new THREE.Group(); knee.position.set(0, -.7, 0); hip.add(knee);
+    knee.add(mesh(new THREE.CapsuleGeometry(.08, .45, 8, 16), M.deer, 0, -.3, 0));
+    knee.add(mesh(new THREE.CylinderGeometry(.1, .12, .14, 16), M.hoof, 0, -.6, 0));
+    legs.push({ hip, knee, front: z > 0, x });
+  }
+  g.add(mesh(fluffy(new THREE.SphereGeometry(.16, 24, 16), .05, 10, seed + 3), M.fur, 0, 1.85, -1.05));
+  // 挽具 + 铃铛
+  g.add(mesh(new THREE.TorusGeometry(.5, .07, 12, 48), M.strap, 0, 1.65, .55));
+  for (let i = 0; i < 5; i++) { const a = -Math.PI / 2 + (i - 2) * .45; g.add(mesh(new THREE.SphereGeometry(.07, 16, 12), M.gold, Math.cos(a) * .53, 1.65 + Math.sin(a) * .53, .6)); }
+  function gallop(t) {
+    for (const l of legs) { const ph = t * 10 + (l.front ? 0 : Math.PI * .8) + (l.x > 0 ? .5 : 0); l.hip.rotation.x = Math.sin(ph) * .7; l.knee.rotation.x = Math.max(0, -Math.cos(ph)) * 1.2 * (l.front ? -1 : 1); }
+    head.rotation.x = Math.sin(t * 10) * .06;
+  }
+  gallop(seed);
+  return { root: g, gallop };
+}
+
+// ---------- 仙女棒 ----------
+function glowTexture() {
+  const c = document.createElement('canvas'); c.width = c.height = 128; const g = c.getContext('2d'), gr = g.createRadialGradient(64, 64, 0, 64, 64, 64);
+  gr.addColorStop(0, 'rgba(255,255,240,1)'); gr.addColorStop(.15, 'rgba(255,220,130,.9)'); gr.addColorStop(.45, 'rgba(255,190,80,.25)'); gr.addColorStop(1, 'rgba(255,190,80,0)');
+  g.fillStyle = gr; g.fillRect(0, 0, 128, 128); const t = new THREE.CanvasTexture(c); t.colorSpace = THREE.SRGBColorSpace; return t;
+}
+function createWand() {
+  const g = new THREE.Group();
+  g.add(mesh(new THREE.CylinderGeometry(.04, .05, 1.4, 16), new THREE.MeshStandardMaterial({ color: 0xfff1c8, metalness: .6, roughness: .25 }), 0, -.7, 0));
+  g.add(mesh(new THREE.CylinderGeometry(.065, .065, .45, 16), new THREE.MeshStandardMaterial({ color: 0x7a4f1d, roughness: .5 }), 0, -1.2, 0));
+  const st = new THREE.Shape(); for (let i = 0; i < 10; i++) { const r = i % 2 ? .1 : .24, a = i * Math.PI / 5 + Math.PI / 2; i ? st.lineTo(Math.cos(a) * r, Math.sin(a) * r) : st.moveTo(Math.cos(a) * r, Math.sin(a) * r); }
+  const sg = new THREE.ExtrudeGeometry(st, { depth: .06, bevelEnabled: true, bevelThickness: .03, bevelSize: .03, bevelSegments: 3 }); sg.translate(0, 0, -.03);
+  g.add(mesh(sg, new THREE.MeshStandardMaterial({ color: 0xffe08a, emissive: 0xffc040, emissiveIntensity: 1.6, metalness: .3, roughness: .3 }), 0, .12, 0));
+  const glow = new THREE.Sprite(new THREE.SpriteMaterial({ map: glowTexture(), blending: THREE.AdditiveBlending, depthWrite: false, transparent: true }));
+  glow.scale.set(1.6, 1.6, 1); glow.position.y = .12; g.add(glow);
+  const light = new THREE.PointLight(0xffd27a, 3, 6, 1.5); light.position.y = .12; g.add(light);
+  return g;
+}
+
+return { createSleigh, createReindeer, createWand, glowTexture };
+})();
+const PlushLib = (() => {
+// 毛绒玩偶风格的 3D 圣诞老人：壳层毛发 + 两段 IK 手臂 + 姿势混合 + 二级运动
+
+// ---------- 噪声 / 工具 ----------
+function hash(x, y, z) { const s = Math.sin(x * 127.1 + y * 311.7 + z * 74.7) * 43758.5453; return s - Math.floor(s); }
+function vnoise(x, y, z) {
+  const xi = Math.floor(x), yi = Math.floor(y), zi = Math.floor(z), xf = x - xi, yf = y - yi, zf = z - zi;
+  const u = xf * xf * (3 - 2 * xf), v = yf * yf * (3 - 2 * yf), w = zf * zf * (3 - 2 * zf), L = (a, b, t) => a + (b - a) * t, c = (i, j, k) => hash(xi + i, yi + j, zi + k);
+  return L(L(L(c(0,0,0), c(1,0,0), u), L(c(0,1,0), c(1,1,0), u), v), L(L(c(0,0,1), c(1,0,1), u), L(c(0,1,1), c(1,1,1), u), v), w);
+}
+function lumpy(geo, amp = .04, freq = 5, seed = 0) {
+  const pos = geo.attributes.position, nor = geo.attributes.normal, p = new THREE.Vector3(), n = new THREE.Vector3();
+  for (let i = 0; i < pos.count; i++) {
+    p.fromBufferAttribute(pos, i); n.fromBufferAttribute(nor, i);
+    const q = p.clone().multiplyScalar(freq).addScalar(seed), d = (vnoise(q.x, q.y, q.z) - .5) * 2 * amp + (vnoise(q.x * 2.3, q.y * 2.3, q.z * 2.3) - .5) * amp * .6;
+    p.addScaledVector(n, d); pos.setXYZ(i, p.x, p.y, p.z);
+  }
+  geo.computeVertexNormals(); return geo;
+}
+const V = (x, y, z) => new THREE.Vector3(x, y, z);
+const sm = t => t <= 0 ? 0 : t >= 1 ? 1 : t * t * (3 - 2 * t);
+
+// ---------- 壳层毛发 ----------
+function furTex(size = 512, density = .62) {
+  const c = document.createElement('canvas'); c.width = c.height = size; const g = c.getContext('2d'), d = g.createImageData(size, size);
+  for (let i = 0; i < size * size; i++) { const v = Math.random() < density ? Math.floor((.35 + .65 * Math.random()) * 255) : 0; d.data[i * 4] = d.data[i * 4 + 1] = d.data[i * 4 + 2] = v; d.data[i * 4 + 3] = 255; }
+  g.putImageData(d, 0, 0); const t = new THREE.CanvasTexture(c); t.wrapS = t.wrapT = THREE.RepeatWrapping; t.generateMipmaps = true; t.minFilter = THREE.LinearMipmapLinearFilter; t.magFilter = THREE.NearestFilter; return t;
+}
+const TEX = { fine: null };
+function furMats(color, { shells = 14, len = .1, rep = 2, grav = 0, tip = 1.08, root = .55, rough = .95, sheen = 1, sheenColor = 0xffffff } = {}) {
+  TEX.fine = TEX.fine || furTex();
+  const mats = []; shells = Math.max(3, Math.round(shells * (window.__furQ || 1)));
+  for (let i = 0; i < shells; i++) {
+    const h = i / (shells - 1 || 1);
+    const m = new THREE.MeshPhysicalMaterial({ color, roughness: rough, sheen, sheenColor, sheenRoughness: .5, envMapIntensity: .5 });
+    m.onBeforeCompile = sh => {
+      Object.assign(sh.uniforms, { uH: { value: h }, uLen: { value: len }, uTex: { value: TEX.fine }, uRep: { value: rep }, uGrav: { value: grav }, uTip: { value: tip }, uRoot: { value: root } });
+      sh.vertexShader = 'uniform float uH;uniform float uLen;uniform float uGrav;varying vec2 vFurUv;\n' + sh.vertexShader
+        .replace('#include <begin_vertex>', '#include <begin_vertex>\n vFurUv = uv; transformed += objectNormal * uLen * uH;')
+        .replace('#include <project_vertex>', 'vec4 _wp = modelMatrix * vec4(transformed,1.0); _wp.y -= uGrav*uH*uH; vec4 mvPosition = viewMatrix * _wp; gl_Position = projectionMatrix * mvPosition;')
+        .replace(/#include <worldpos_vertex>/, '#include <worldpos_vertex>');
+      // project_vertex 已被替换，需要保留 mvPosition 给后续使用
+      sh.fragmentShader = 'uniform float uH;uniform sampler2D uTex;uniform float uRep;uniform float uTip;uniform float uRoot;varying vec2 vFurUv;\n' + sh.fragmentShader
+        .replace('#include <clipping_planes_fragment>', '#include <clipping_planes_fragment>\n float _n = texture2D(uTex, vFurUv * vec2(uRep*2.0, uRep)).r; if (uH > 0.001 && _n < uH*0.92+0.04) discard;')
+        .replace('#include <color_fragment>', '#include <color_fragment>\n diffuseColor.rgb *= mix(uRoot, uTip, uH);');
+    };
+    m.customProgramCacheKey = () => 'shellfur1';
+    mats.push(m);
+  }
+  return mats;
+}
+// 把一个几何体做成毛绒（多层壳）
+function furry(parent, geo, mats, x = 0, y = 0, z = 0, sx = 1, sy = 1, sz = 1) {
+  const g = new THREE.Group(); g.position.set(x, y, z); g.scale.set(sx, sy, sz);
+  mats.forEach((m, i) => { const me = new THREE.Mesh(geo, m); me.renderOrder = i; g.add(me); });
+  parent.add(g); return g;
+}
+function solid(parent, geo, mat, x = 0, y = 0, z = 0, sx = 1, sy = 1, sz = 1) { const m = new THREE.Mesh(geo, mat); m.position.set(x, y, z); m.scale.set(sx, sy, sz); parent.add(m); return m; }
+
+// ---------- 两段 IK ----------
+const _q = new THREE.Quaternion(), DOWN = V(0, -1, 0);
+function solveArm(arm, target, pole) { // target/pole 在 root 局部坐标
+  const S = arm.sh.position, a = arm.a, b = arm.b, D = target.clone().sub(S); let d = D.length(); d = Math.min(d, a + b - .02); D.normalize();
+  const cosA = THREE.MathUtils.clamp((a * a + d * d - b * b) / (2 * a * d), -1, 1), sinA = Math.sqrt(1 - cosA * cosA);
+  const perp = pole.clone().sub(D.clone().multiplyScalar(pole.dot(D))).normalize();
+  const E = S.clone().addScaledVector(D, a * cosA).addScaledVector(perp, a * sinA);
+  const uE = E.clone().sub(S).normalize(), T = S.clone().addScaledVector(D, d), uF = T.clone().sub(E).normalize();
+  arm.sh.quaternion.setFromUnitVectors(DOWN, uE);
+  const inv = arm.sh.quaternion.clone().invert(); arm.el.quaternion.setFromUnitVectors(DOWN, uF.clone().applyQuaternion(inv));
+}
+
+// ---------- 材质 ----------
+function makeMats() {
+  return {
+    skin: new THREE.MeshPhysicalMaterial({ color: 0xf6c7a5, roughness: .7, sheen: .8, sheenColor: 0xffd0c0, sheenRoughness: .6 }),
+    blush: new THREE.MeshPhysicalMaterial({ color: 0xf59a98, roughness: .7, sheen: .6, sheenColor: 0xffc0c0 }),
+    nose: new THREE.MeshPhysicalMaterial({ color: 0xf09a98, roughness: .55, sheen: .6, sheenColor: 0xffd0d0 }),
+    eyeW: new THREE.MeshPhysicalMaterial({ color: 0xfdfdfd, roughness: .12, clearcoat: 1 }),
+    line: new THREE.MeshStandardMaterial({ color: 0x1b2433, roughness: .4 }),
+    iris: new THREE.MeshPhysicalMaterial({ color: 0x3f8fd8, roughness: .12, clearcoat: 1 }),
+    irisRim: new THREE.MeshPhysicalMaterial({ color: 0x1d4f8a, roughness: .2, clearcoat: 1 }),
+    pupil: new THREE.MeshPhysicalMaterial({ color: 0x07090d, roughness: .08, clearcoat: 1 }),
+    shine: new THREE.MeshBasicMaterial({ color: 0xffffff }),
+    mouth: new THREE.MeshStandardMaterial({ color: 0x7a2026, roughness: .6 }),
+    tongue: new THREE.MeshStandardMaterial({ color: 0xec7a80, roughness: .5 }),
+    black: new THREE.MeshPhysicalMaterial({ color: 0x1c1a19, roughness: .35, clearcoat: .7 }),
+    gold: new THREE.MeshStandardMaterial({ color: 0xffc64a, metalness: 1, roughness: .25 }),
+    redFur: furMats(0xb8000c, { shells: 8, len: .045, rep: 7, root: .62, tip: 1.0, sheen: .7, sheenColor: 0xff3a3a }),
+    redPlush: furMats(0xc2000e, { shells: 11, len: .075, rep: 3.2, root: .58, tip: 1.06, sheen: .8, sheenColor: 0xff5a5a }),   // 手套用的长绒
+    whiteFur: furMats(0xfbf8f3, { shells: 16, len: .11, rep: 2.2, root: .62, tip: 1.06 }),
+    beardFur: furMats(0xfdfbf7, { shells: 18, len: .16, rep: 1.6, grav: .07, root: .6, tip: 1.05 }),
+  };
+}
+
+function createPlushSanta() {
+  const M = makeMats(), root = new THREE.Group(), body = new THREE.Group(); root.add(body);
+  // 身体
+  furry(body, new THREE.SphereGeometry(1, 64, 48), M.redFur, 0, 1.05, 0, 1.2, 1.08, 1.05);
+  furry(body, lumpy(new THREE.TorusGeometry(.86, .2, 24, 96), .03, 6), M.whiteFur, 0, .34, 0, 1.08, 1, 1).rotation.x = Math.PI / 2;
+  const strip = new THREE.CatmullRomCurve3([...Array(9)].map((_, i) => { const y = .38 + i * .17, dy = (y - 1.05) / 1.08; return V(0, y, Math.sqrt(Math.max(0, 1 - dy * dy)) * 1.05 + .01); }));
+  furry(body, new THREE.TubeGeometry(strip, 48, .14, 18), M.whiteFur, 0, 0, 0, 1.3, 1, 1);
+  const belt = solid(body, new THREE.TorusGeometry(1, .1, 16, 96), M.black, 0, .78, 0, 1.17, 1.06, 1.6); belt.rotation.x = Math.PI / 2;
+  const bk = new THREE.Group(); bk.position.set(0, .78, 1.07); body.add(bk); solid(bk, new THREE.BoxGeometry(.42, .34, .07), M.gold); solid(bk, new THREE.BoxGeometry(.26, .18, .09), M.black);
+  // 腿
+  const legs = new THREE.Group(); root.add(legs);
+  for (const s of [-1, 1]) {
+    furry(legs, new THREE.CapsuleGeometry(.32, .55, 12, 24), M.redFur, s * .46, .3, .6).rotation.x = Math.PI / 2;
+    solid(legs, new THREE.SphereGeometry(.32, 24, 16), M.black, s * .46, -.25, 1.15, .95, .8, 1.25);
+  }
+
+  // ---- 头 ----
+  const neck = new THREE.Group(); neck.position.set(0, 1.98, .22); body.add(neck);
+  const head = new THREE.Group(); head.position.set(0, .5, 0); head.scale.setScalar(1.22); neck.add(head);
+  solid(head, new THREE.SphereGeometry(.74, 64, 48), M.skin, 0, 0, 0, 1, .95, .92);
+  for (const s of [-1, 1]) solid(head, new THREE.SphereGeometry(.2, 32, 24), M.blush, s * .42, -.13, .55, 1.05, .78, .55);
+  solid(head, new THREE.SphereGeometry(.15, 32, 24), M.nose, 0, -.1, .72, 1.1, .92, .9);
+  // 眼睛：描边 + 白 + 蓝虹膜 + 瞳孔 + 高光
+  const eyes = [];
+  for (const s of [-1, 1]) {
+    const e = new THREE.Group(); e.position.set(s * .27, .07, .6); e.rotation.y = s * .36; e.scale.setScalar(1.3); head.add(e);
+    solid(e, new THREE.SphereGeometry(1, 40, 32), M.line, 0, 0, -.01, .145, .175, .06);
+    solid(e, new THREE.SphereGeometry(1, 40, 32), M.eyeW, 0, 0, 0, .13, .16, .065);
+    const look = new THREE.Group(); e.add(look);
+    solid(look, new THREE.SphereGeometry(1, 32, 24), M.irisRim, 0, 0, .045, .095, .11, .03);
+    solid(look, new THREE.SphereGeometry(1, 32, 24), M.iris, 0, 0, .05, .083, .097, .03);
+    solid(look, new THREE.SphereGeometry(1, 24, 16), M.pupil, 0, 0, .058, .05, .06, .022);
+    solid(look, new THREE.SphereGeometry(.024, 16, 12), M.shine, .03, .04, .08);
+    solid(look, new THREE.SphereGeometry(.011, 12, 8), M.shine, -.028, -.035, .078);
+    eyes.push({ e, look });
+  }
+  // 嘴
+  const mouth = solid(head, new THREE.SphereGeometry(1, 32, 24), M.mouth, 0, -.4, .63, .12, .07, .06);
+  const tongue = solid(head, new THREE.SphereGeometry(1, 24, 16), M.tongue, 0, -.43, .67, .07, .035, .04);
+  // 八字胡
+  for (const s of [-1, 1]) {
+    const g = furry(head, lumpy(new THREE.SphereGeometry(1, 40, 32), .06, 3, s + 9), M.whiteFur, s * .2, -.27, .68, .27, .14, .17); g.rotation.z = -s * .35; g.rotation.y = s * .25;
+    const t = furry(head, new THREE.SphereGeometry(1, 24, 16), M.whiteFur, s * .43, -.2, .58, .12, .08, .1); t.rotation.z = -s * .9;
+  }
+  // 胡子（下垂的长毛）
+  const beard = new THREE.Group(); beard.position.set(0, -.42, .42); head.add(beard);
+  furry(beard, lumpy(new THREE.SphereGeometry(1, 72, 56), .07, 3.2, 1), M.beardFur, 0, -.36, .12, .6, .62, .42);
+  for (const s of [-1, 1]) furry(beard, lumpy(new THREE.SphereGeometry(1, 40, 32), .05, 4, s + 2), M.beardFur, s * .42, .0, -.1, .3, .45, .38);
+  // 两侧和后面的头发
+  for (const [x, y, z, r] of [[-.68, -.12, -.1, .27], [.68, -.12, -.1, .27], [0, -.05, -.6, .4]]) furry(head, new THREE.SphereGeometry(r, 32, 24), M.whiteFur, x, y, z);
+  // 大帽子：圆鼓鼓，向右耷拉
+  const hat = new THREE.Group(); hat.position.set(0, .36, 0); head.add(hat);
+  const hg = new THREE.SphereGeometry(1, 72, 56), hp = hg.attributes.position;
+  for (let i = 0; i < hp.count; i++) {
+    let x = hp.getX(i), y = hp.getY(i), z = hp.getZ(i);
+    if (y < -.3) y = -.3 + (y + .3) * .2;               // 底部压平
+    const r = Math.max(0, x + .2), droop = r * r * Math.max(0, y + .35) * .75; // 右侧鼓起并往下耷拉
+    hp.setXYZ(i, x * (1 + .3 * Math.max(0, x)), y - droop, z * (1 + .05 * Math.max(0, x)));
+  }
+  hg.computeVertexNormals();
+  const flop = new THREE.Group(); hat.add(flop);
+  furry(flop, lumpy(hg, .03, 3, 5), M.redFur, .05, .55, -.05, 1.0, 1.0, .98);
+  const pom = new THREE.Group(); pom.position.set(1.22, -.12, .12); flop.add(pom);
+  furry(pom, lumpy(new THREE.SphereGeometry(.34, 48, 32), .03, 6, 8), M.whiteFur);
+  const brim = furry(hat, lumpy(new THREE.TorusGeometry(.8, .25, 32, 110), .035, 6, 4), M.whiteFur, .0, .02, .0, 1.03, 1, .98);
+  brim.rotation.x = Math.PI / 2 - .12; brim.rotation.y = -.05;
+
+  // ---- 手臂 ----
+  function arm(s) {
+    const sh = new THREE.Group(); sh.position.set(s * 1.02, 1.6, .05); body.add(sh);
+    furry(sh, new THREE.SphereGeometry(.33, 32, 24), M.redFur);
+    furry(sh, new THREE.CapsuleGeometry(.3, .5, 12, 24), M.redFur, 0, -.42, 0);
+    const el = new THREE.Group(); el.position.set(0, -.85, 0); sh.add(el);
+    furry(el, new THREE.CapsuleGeometry(.27, .4, 12, 24), M.redFur, 0, -.3, 0);
+    furry(el, lumpy(new THREE.TorusGeometry(.29, .19, 24, 64), .035, 7, s), M.whiteFur, 0, -.6, 0).rotation.x = Math.PI / 2;   // 更蓬松的白色袖口
+    const hand = new THREE.Group(); hand.position.set(0, -.86, 0); el.add(hand);
+    furry(hand, lumpy(new THREE.SphereGeometry(.3, 48, 36), .012, 6, s + 4), M.redPlush, 0, -.17, 0, 1, 1.16, .8);   // 胖胖的毛绒手套
+    const thumb = furry(hand, new THREE.CapsuleGeometry(.105, .13, 10, 20), M.redPlush, -s * .25, -.07, .07);      // 分开的大拇指，朝上朝外
+    thumb.rotation.z = s * .95; thumb.rotation.x = -.25;
+    return { sh, el, hand, thumb, a: .85, b: .9, s };
+  }
+  const armR = arm(-1), armL = arm(1);
+
+  // ---- 姿势参数（全部可插值）----
+  const BASE = { lean: 0, turn: 0, tilt: 0, nod: 0, yaw: 0, roll: 0, eyeX: 0, eyeY: 0, mouth: .3, rH: [-.5, 1.25, 1.25], lH: [.5, 1.25, 1.25], rPole: [-1, -1, -.2], lPole: [1, -1, -.2], wave: 0, lwave: 0, rHandRot: [0, 0, 0], lHandRot: [0, 0, 0], bob: 0, bobF: 4 };
+  const st = { hatX: 0, hatXV: 0, hatAng: 0, hatVel: 0, pomAng: 0, pomVel: 0, beard: 0, beardVel: 0, prevYaw: 0, prevRoll: 0, prevNod: 0, blink: 0, nextBlink: 1.5 };
+  function apply(P, t, dt = 1 / 30) {
+    body.rotation.set(P.lean, P.turn, P.tilt);
+    head.rotation.set(P.nod, P.yaw, P.roll);
+    // 眼睛看向 + 眨眼
+    for (const { e, look } of eyes) { look.position.set(P.eyeX * .03, P.eyeY * .03, 0); }
+    st.nextBlink -= dt; if (st.nextBlink < 0) { st.blink = .18; st.nextBlink = 2 + Math.random() * 2.5; }
+    const bl = st.blink > 0 ? Math.sin((1 - st.blink / .18) * Math.PI) : 0; st.blink = Math.max(0, st.blink - dt);
+    for (const { e } of eyes) e.scale.y = 1 - bl * .9;
+    mouth.scale.set(.12, .03 + .07 * P.mouth, .06); tongue.visible = P.mouth > .35;
+    // IK 手臂
+    const rH = V(...P.rH), lH = V(...P.lH);
+    if (P.wave) rH.x += Math.sin(t * 9) * .22 * P.wave;
+    if (P.lwave) lH.x -= Math.sin(t * 9) * .22 * P.lwave;
+    solveArm(armR, rH, V(...P.rPole).normalize()); solveArm(armL, lH, V(...P.lPole).normalize());
+    armR.hand.rotation.set(P.rHandRot[0], P.rHandRot[1], P.rHandRot[2] + (P.wave ? Math.sin(t * 9 + .6) * .5 * P.wave : 0));
+    armL.hand.rotation.set(P.lHandRot[0], P.lHandRot[1], P.lHandRot[2] - (P.lwave ? Math.sin(t * 9 + .6) * .5 * P.lwave : 0));
+    // 二级运动：帽子、绒球、胡子跟随头部运动摆动（弹簧）
+    if (dt > 0) {
+    const dYaw = (P.yaw + P.turn - st.prevYaw) / dt, dRoll = (P.roll + P.tilt - st.prevRoll) / dt, dNod = (P.nod + P.lean - st.prevNod) / dt;
+    st.prevYaw = P.yaw + P.turn; st.prevRoll = P.roll + P.tilt; st.prevNod = P.nod + P.lean;
+    const spring = (a, v, force, k = 60, c = 7) => { v += (-k * a - c * v + force) * dt; a += v * dt; return [a, v]; };
+    const A = root.userData.acc || { x: 0, y: 0, z: 0 };
+    [st.hatAng, st.hatVel] = spring(st.hatAng, st.hatVel, -dRoll * 4 - dYaw * 2 - A.x * 3, 45, 5);
+    [st.hatX, st.hatXV] = spring(st.hatX, st.hatXV, -dNod * 3 - A.z * 2.5 + A.y * 1.2, 45, 5);
+    [st.pomAng, st.pomVel] = spring(st.pomAng, st.pomVel, -dRoll * 7 - dNod * 4 - A.x * 5 + A.y * 2, 32, 3.5);
+    [st.beard, st.beardVel] = spring(st.beard, st.beardVel, -dNod * 3 - A.z * 2 + A.y * 1, 45, 5);
+    flop.rotation.z = THREE.MathUtils.clamp(st.hatAng, -.5, .5) * .55; flop.rotation.x = THREE.MathUtils.clamp(st.hatX, -.5, .5) * .4; pom.rotation.z = THREE.MathUtils.clamp(st.pomAng, -.8, .8);
+    pom.position.y = -.12 - Math.abs(pom.rotation.z) * .1; beard.rotation.x = THREE.MathUtils.clamp(st.beard, -.4, .4) * .4;
+    }
+    // 呼吸
+    const bb = Math.abs(Math.sin(t * P.bobF)) * P.bob;   // 弹性起伏 + 挤压拉伸
+    body.position.y = bb; head.rotation.x += P.bob * 1.4 * Math.sin(t * P.bobF * 2 - 1.1); head.rotation.z += P.bob * .8 * Math.sin(t * P.bobF - .6);
+    const sq = Math.sin(t * P.bobF * 2) * P.bob * .35;
+    body.scale.set(1 + Math.sin(t * 2.4) * .012 + sq, 1 - Math.sin(t * 2.4) * .012 - sq, 1 + sq);
+  }
+  const mix = (A, B, k) => { const o = {}; for (const key in A) { const a = A[key], b = B[key] ?? a; o[key] = Array.isArray(a) ? a.map((v, i) => v + (b[i] - v) * k) : a + (b - a) * k; } return o; };
+  apply(BASE, 0);
+  return { root, body, head, armR, armL, eyes, legs, apply, mix, BASE, M };
+}
+
+return { createPlushSanta };
+})();
+const { createSleigh, createReindeer, createWand, glowTexture } = SantaLib, { createPlushSanta } = PlushLib;
+// 圣诞老人出场 v3：从树后飞出 → 停在镜头前 → 伸左手接住飞来的仙女棒 → 按笔画写 Merry Christmas → 绕回树后（正好一圈）
+
+
+
+
+const site = window.__site, S = site.S;
+const cv3 = document.getElementById('three'), upc = document.getElementById('up'), fxc = document.getElementById('fx');
+const renderer = new THREE.WebGLRenderer({ canvas: cv3, antialias: true, alpha: true });
+renderer.setPixelRatio(Math.min(1.5, devicePixelRatio || 1)); renderer.setClearColor(0, 0);
+renderer.toneMapping = THREE.ACESFilmicToneMapping; renderer.toneMappingExposure = 1.05; renderer.outputColorSpace = THREE.SRGBColorSpace;
+const scene = new THREE.Scene();
+const pm = new THREE.PMREMGenerator(renderer); scene.environment = pm.fromScene(new RoomEnvironment(), .04).texture; scene.environmentIntensity = .45;
+scene.add(new THREE.HemisphereLight(0xb0c8ff, 0x2a1c14, .8));
+const key = new THREE.DirectionalLight(0xfff0dc, 2.5); key.position.set(4, 6, 9); scene.add(key);
+const rim = new THREE.DirectionalLight(0x9fc0ff, 3.2); rim.position.set(-6, 5, -7); scene.add(rim);
+const rim2 = new THREE.DirectionalLight(0xffd9a0, 1.2); rim2.position.set(7, 2, -5); scene.add(rim2);
+const camera = new THREE.PerspectiveCamera(40, 1, .05, 400);
+function resize() {
+  const w = innerWidth, h = innerHeight, d = Math.min(2, devicePixelRatio || 1);
+  renderer.setSize(w, h, false); camera.aspect = w / h;
+  camera.fov = Math.min(70, 2 * Math.atan(Math.tan(20 * Math.PI / 180) * Math.max(1, 1.78 / camera.aspect)) * 180 / Math.PI);   // 竖屏时放宽视野
+  camera.updateProjectionMatrix();
+}
+resize(); addEventListener('resize', resize);
+camera.position.set(0, 0, 0); camera.lookAt(0, 0, -10); camera.updateMatrixWorld();
+
+// ---------- 角色 ----------
+const sleigh = createSleigh(); scene.add(sleigh); sleigh.rotation.order = 'YXZ';
+const santa = createPlushSanta(); santa.root.position.set(0, 1.0, -.35); santa.root.scale.setScalar(.92); sleigh.add(santa.root);
+const deer = [0, 1, 2, 3].map(i => { const d = createReindeer(i * 1.3); d.root.rotation.order = 'YXZ'; scene.add(d.root); return d; });
+const wand = createWand(); scene.add(wand); wand.visible = false;
+const reinGeo = new THREE.BufferGeometry(); reinGeo.setAttribute('position', new THREE.Float32BufferAttribute(new Float32Array(8 * 3), 3));
+const reins = new THREE.LineSegments(reinGeo, new THREE.LineBasicMaterial({ color: 0xffd36b })); scene.add(reins);
+
+// 闪光粒子
+const NP = 1600, pPos = new Float32Array(NP * 3), pCol = new Float32Array(NP * 3), pVel = new Float32Array(NP * 3), pLife = new Float32Array(NP).fill(9), pMax = new Float32Array(NP).fill(1), pBase = new Float32Array(NP * 3);
+const pGeo = new THREE.BufferGeometry(); pGeo.setAttribute('position', new THREE.BufferAttribute(pPos, 3)); pGeo.setAttribute('color', new THREE.BufferAttribute(pCol, 3));
+scene.add(new THREE.Points(pGeo, new THREE.PointsMaterial({ size: .3, map: glowTexture(), vertexColors: true, blending: THREE.AdditiveBlending, depthWrite: false, transparent: true })));
+let pIdx = 0;
+function emit(p, n = 1, spread = .3, col = [1, .85, .5], speed = .6) {
+  for (let k = 0; k < n; k++) {
+    const i = pIdx = (pIdx + 1) % NP; pPos[i * 3] = p.x + (Math.random() - .5) * spread; pPos[i * 3 + 1] = p.y + (Math.random() - .5) * spread; pPos[i * 3 + 2] = p.z + (Math.random() - .5) * spread;
+    pVel[i * 3] = (Math.random() - .5) * speed; pVel[i * 3 + 1] = (Math.random() - .3) * speed; pVel[i * 3 + 2] = (Math.random() - .5) * speed;
+    pLife[i] = 0; pMax[i] = .5 + Math.random() * .8; const w = Math.random() < .3; pBase[i * 3] = w ? 1 : col[0]; pBase[i * 3 + 1] = w ? 1 : col[1]; pBase[i * 3 + 2] = w ? 1 : col[2];
+  }
+}
+function updateParticles(dt) {
+  for (let i = 0; i < NP; i++) {
+    if (pLife[i] >= pMax[i]) { pCol[i * 3] = pCol[i * 3 + 1] = pCol[i * 3 + 2] = 0; continue; }
+    pLife[i] += dt; const k = Math.max(0, 1 - pLife[i] / pMax[i]);
+    pPos[i * 3] += pVel[i * 3] * dt; pPos[i * 3 + 1] += pVel[i * 3 + 1] * dt - .25 * dt; pPos[i * 3 + 2] += pVel[i * 3 + 2] * dt;
+    pCol[i * 3] = pBase[i * 3] * k; pCol[i * 3 + 1] = pBase[i * 3 + 1] * k; pCol[i * 3 + 2] = pBase[i * 3 + 2] * k;
+  }
+  pGeo.attributes.position.needsUpdate = true; pGeo.attributes.color.needsUpdate = true;
+}
+
+// ---------- 工具 ----------
+const V = (x, y, z) => new THREE.Vector3(x, y, z), lerp = THREE.MathUtils.lerp, clamp = THREE.MathUtils.clamp;
+const sm = t => t <= 0 ? 0 : t >= 1 ? 1 : t * t * (3 - 2 * t), win = (t, a, b) => sm((t - a) / (b - a));
+const easeOut = t => 1 - Math.pow(1 - clamp(t, 0, 1), 2.3);
+const wpos = o => o.getWorldPosition(new THREE.Vector3());
+function toScreen(p) { const q = p.clone().project(camera); return { x: (q.x + 1) / 2 * innerWidth, y: (1 - q.y) / 2 * innerHeight, z: q.z }; }
+function atDepth(x, y, zw) { const o = camera.position, d = V(x / innerWidth * 2 - 1, 1 - y / innerHeight * 2, .5).unproject(camera).sub(o).normalize(); return o.clone().addScaledVector(d, (zw - o.z) / d.z); }
+function fromScreen(x, y, z) { return V(x / innerWidth * 2 - 1, 1 - y / innerHeight * 2, z).unproject(camera); }
+const curve = pts => new THREE.CatmullRomCurve3(pts.map(p => V(...p)), false, 'centripetal');
+
+// ======================================================================
+// 笔画书写：把文字粒子的点阵细化成骨架，按笔画顺序走一遍 → 仙女棒的轨迹 + 每个粒子出现的时间
+// ======================================================================
+let PEN = null;
+function buildPen() {
+  const pts = site.textPts(), TF = site.textFront(); if (!pts.length) return null;
+  // 网页给出了真实笔顺的连笔字轨迹：直接用（粒子的出现时间 rt 也已经算好）
+  const TP = site.textPen && site.textPen(); if (TP && TP.length) return { P: TP.map(q => ({ x: q.x, y: q.y, t: q.t, d: q.lift ? 0 : 1 })), src: pts };
+  const st = Math.max(2, Math.round(TF.size / 50));
+  let minx = 1e9, miny = 1e9, maxx = -1e9, maxy = -1e9;
+  for (const p of pts) { minx = Math.min(minx, p.fx); maxx = Math.max(maxx, p.fx); miny = Math.min(miny, p.fy); maxy = Math.max(maxy, p.fy); }
+  const W = Math.round((maxx - minx) / st) + 4, H = Math.round((maxy - miny) / st) + 4, G = new Uint8Array(W * H), id = (x, y) => y * W + x;
+  for (const p of pts) { p.gx = Math.round((p.fx - minx) / st) + 2; p.gy = Math.round((p.fy - miny) / st) + 2; G[id(p.gx, p.gy)] = 1; }
+  // Zhang-Suen 细化
+  let changed = true;
+  while (changed) {
+    changed = false;
+    for (let pass = 0; pass < 2; pass++) {
+      const del = [];
+      for (let y = 1; y < H - 1; y++) for (let x = 1; x < W - 1; x++) {
+        if (!G[id(x, y)]) continue;
+        const n = [G[id(x, y - 1)], G[id(x + 1, y - 1)], G[id(x + 1, y)], G[id(x + 1, y + 1)], G[id(x, y + 1)], G[id(x - 1, y + 1)], G[id(x - 1, y)], G[id(x - 1, y - 1)]];
+        const B = n.reduce((a, b) => a + b, 0); if (B < 2 || B > 6) continue;
+        let A = 0; for (let k = 0; k < 8; k++) if (!n[k] && n[(k + 1) % 8]) A++; if (A !== 1) continue;
+        if (pass === 0 ? (n[0] * n[2] * n[4] === 0 && n[2] * n[4] * n[6] === 0) : (n[0] * n[2] * n[6] === 0 && n[0] * n[4] * n[6] === 0)) del.push(id(x, y));
+      }
+      for (const i of del) G[i] = 0; if (del.length) changed = true;
+    }
+  }
+  const NB = [[1, 0], [1, 1], [0, 1], [-1, 1], [-1, 0], [-1, -1], [0, -1], [1, -1]];
+  const nbrs = i => { const x = i % W, y = (i / W) | 0, o = []; for (const [dx, dy] of NB) { const j = id(x + dx, y + dy); if (G[j]) o.push(j); } return o; };
+  // 修剪细化后留下的小毛刺（短分叉会让笔来回抖）
+  const SPUR = Math.max(5, Math.round(TF.size * .09 / st));
+  for (let iter = 0; iter < 3; iter++) {
+    const ends = []; for (let i = 0; i < W * H; i++) if (G[i] && nbrs(i).length === 1) ends.push(i);
+    for (const e of ends) {
+      if (!G[e]) continue; const path = [e]; let prev = -1, cur = e, junction = false;
+      while (path.length < SPUR) { const nb = nbrs(cur).filter(j => j !== prev); if (nb.length !== 1) { junction = nb.length > 1; break; } prev = cur; cur = nb[0]; if (nbrs(cur).length > 2) { junction = true; break; } path.push(cur); }
+      if (junction && path.length < SPUR) for (const j of path) G[j] = 0;
+    }
+  }
+  // 把骨架拆成一段段“笔段”（端点/交叉点之间的线）
+  const isNode = i => nbrs(i).length !== 2, pt = i => ({ x: minx + (i % W - 2) * st, y: miny + (((i / W) | 0) - 2) * st });
+  const segs = [], onSeg = new Uint8Array(W * H), seen = new Set();
+  for (let n = 0; n < W * H; n++) {
+    if (!G[n] || !isNode(n)) continue;
+    const nb0 = nbrs(n);
+    if (!nb0.length) { segs.push([n, n, n]); continue; }                 // 孤立的点（比如 i 上的点）
+    for (const nb of nb0) {
+      if (seen.has(n + '-' + nb)) continue;
+      const path = [n]; let prev = n, cur = nb;
+      for (;;) { path.push(cur); if (isNode(cur)) break; const nx = nbrs(cur).filter(j => j !== prev); if (!nx.length) break; prev = cur; cur = nx[0]; if (cur === n) { path.push(cur); break; } }
+      seen.add(n + '-' + path[1]); seen.add(path[path.length - 1] + '-' + path[path.length - 2]);
+      for (const k of path) onSeg[k] = 1; segs.push(path);
+    }
+  }
+  for (let i = 0; i < W * H; i++) if (G[i] && !onSeg[i]) {               // 没有端点的闭合圈（比如 o）
+    const path = [i]; onSeg[i] = 1; let prev = -1, cur = i;
+    for (;;) { const nx = nbrs(cur).filter(j => j !== prev && !onSeg[j]); if (!nx.length) break; prev = cur; cur = nx[0]; onSeg[cur] = 1; path.push(cur); }
+    path.push(i); segs.push(path);
+  }
+  // 按单词从左到右逐个书写：每次只在“最左边还没写的那一小段范围”里挑笔段，优先接着笔现在的位置写
+  const E = segs.filter(p => p.length > 2 || p[0] === p[p.length - 1]).map(p => { const P = p.map(pt), xs = P.map(q => q.x); return { P, minx: Math.min(...xs), done: false }; });
+  const BAND = TF.size * .42, strokes = [];
+  let pen = { x: -1e9, y: TF.y };
+  while (E.some(e => !e.done)) {
+    const rest = E.filter(e => !e.done), left = Math.min(...rest.map(e => e.minx)), cand = rest.filter(e => e.minx <= left + BAND);
+    if (pen.x < -1e8) pen = { x: left, y: TF.y };
+    let best = null, bd = 1e18, rev = false;
+    for (const e of cand) {
+      const a = e.P[0], b = e.P[e.P.length - 1];
+      const da = Math.hypot(a.x - pen.x, a.y - pen.y) + (a.x - left) * .5, db = Math.hypot(b.x - pen.x, b.y - pen.y) + (b.x - left) * .5;
+      if (da < bd) { bd = da; best = e; rev = false; } if (db < bd) { bd = db; best = e; rev = true; }
+    }
+    best.done = true; const P = rev ? best.P.slice().reverse() : best.P.slice(), last = strokes[strokes.length - 1];
+    if (last && Math.hypot(P[0].x - pen.x, P[0].y - pen.y) < st * 2.5) last.push(...P.slice(1)); else strokes.push(P);   // 连着就继续写，断开就抬笔
+    pen = P[P.length - 1];
+  }
+  // 每一笔：去掉像素锯齿（多次滑动平均），再按固定间距重采样，让笔速均匀
+  const smooth = a0 => { let a = a0.map(p => ({ x: p.x, y: p.y })); for (let pass = 0; pass < 5; pass++) a = a.map((p, i) => { if (i === 0 || i === a.length - 1) return p; let sx = 0, sy = 0, n = 0; for (let k = -3; k <= 3; k++) { const j = i + k; if (j < 0 || j >= a.length) continue; sx += a[j].x; sy += a[j].y; n++; } return { x: sx / n, y: sy / n }; }); return a; };
+  const resample = (a, step) => { if (a.length < 2) return a; const out = [a[0]]; let carry = 0; for (let i = 1; i < a.length; i++) { let ax = a[i - 1].x, ay = a[i - 1].y; const bx = a[i].x, by = a[i].y; let seg = Math.hypot(bx - ax, by - ay); while (seg > 0 && carry + seg >= step) { const k = (step - carry) / seg; ax += (bx - ax) * k; ay += (by - ay) * k; out.push({ x: ax, y: ay }); seg = Math.hypot(bx - ax, by - ay); carry = 0; } carry += seg; } out.push(a[a.length - 1]); return out; };
+  const P = []; let acc = 0;
+  strokes.forEach(sk => resample(smooth(sk), st * .8).forEach((q, k) => {
+    if (P.length) { const prev = P[P.length - 1], dist = Math.hypot(q.x - prev.x, q.y - prev.y) / st; acc += k === 0 ? 2.5 + dist * .6 : dist; }
+    P.push({ x: q.x, y: q.y, d: 1, t: acc });
+  }));
+  // 每个粒子：笔第一次经过它附近的时间
+  const R = Math.max(2, Math.round(TF.size * .075 / st)), cell = new Map();
+  P.forEach((q, k) => { if (q.d !== 1) return; const key = Math.round((q.x - minx) / st) + ',' + Math.round((q.y - miny) / st); if (!cell.has(key)) cell.set(key, q.t); });
+  for (const p of pts) {
+    let best = Infinity; const gx = Math.round((p.fx - minx) / st), gy = Math.round((p.fy - miny) / st);
+    for (let dy = -R; dy <= R; dy++) for (let dx = -R; dx <= R; dx++) { if (dx * dx + dy * dy > R * R) continue; const v = cell.get((gx + dx) + ',' + (gy + dy)); if (v !== undefined && v < best) best = v; }
+    p.rt = best === Infinity ? acc : best;
+  }
+  for (const p of pts) p.rt /= acc;
+  for (const q of P) q.t /= acc;
+  return { P, src: pts };
+}
+function penAt(u) {
+  const P = PEN.P; if (u <= 0) return P[0]; if (u >= 1) return P[P.length - 1];
+  let lo = 0, hi = P.length - 1; while (hi - lo > 1) { const m = (lo + hi) >> 1; if (P[m].t < u) lo = m; else hi = m; }
+  const a = P[lo], b = P[hi], k = (u - a.t) / ((b.t - a.t) || 1); return { x: lerp(a.x, b.x, k), y: lerp(a.y, b.y, k) };
+}
+
+// ======================================================================
+// 时间线与路线：从树后（左侧）飞出 → 正前方停下 → 写字 → 从右侧绕回树后
+// ======================================================================
+const T = { arrive: 5.0, offer: 5.3, wandFly: 5.6, grab: 6.6, write0: 7.9, write1: 14.3, leave: 14.8, end: 19.5 };
+const TREE_DEPTH = 22;
+const pathA = curve([[1.5, -4.5, -60], [-3, -4.2, -47], [-9.5, -2.6, -34], [-12.5, -.6, -23], [-9.5, 1.4, -15.5], [-4, -1.4, -11.8], [1.5, -2.7, -10.9], [9.5, -2.5, -10.7]]);
+let pathE = null;
+function leadAt(t) {
+  if (t < T.arrive) return pathA.getPointAt(easeOut(t / T.arrive));
+  const end = pathA.getPointAt(1), a = t - T.arrive;
+  if (t < T.leave) return end.clone().add(V(0, Math.sin(a * 1.6) * .14 + .4 * Math.exp(-3 * a) * Math.sin(7 * a), 0));
+  return pathE.getPointAt(clamp(Math.pow((t - T.leave) / (T.end - T.leave), 1.15), 0, 1));
+}
+const nodes = [0, 1, 2].map(() => ({ p: V(), h: V(0, 0, 1), roll: 0 })), gaps = [3.3, 5.2];
+let prevLead = null, prevYaw = [0, 0, 0], speed = 0;
+function initChain() {
+  const a = leadAt(0), b = leadAt(.05), h = b.clone().sub(a).normalize();
+  nodes[0].p.copy(a); nodes[1].p.copy(a).addScaledVector(h, -gaps[0]); nodes[2].p.copy(nodes[1].p).addScaledVector(h, -gaps[1]);
+  nodes.forEach(n => n.h.copy(h)); prevLead = a.clone();
+}
+function stepChain(t, dt) {
+  const L = leadAt(t), vel = L.clone().sub(prevLead); speed = vel.length() / dt; prevLead.copy(L);
+  nodes[0].p.copy(L); if (speed > .8) nodes[0].h.lerp(vel.normalize(), .3).normalize();
+  for (let i = 1; i < 3; i++) {
+    const f = nodes[i - 1], n = nodes[i], d = n.p.clone().sub(f.p), len = d.length() || 1;
+    n.p.copy(f.p).addScaledVector(d, gaps[i - 1] / len); n.h.lerp(f.p.clone().sub(n.p).normalize(), .45).normalize();
+  }
+  nodes.forEach((n, i) => { const yaw = Math.atan2(n.h.x, n.h.z); let dy = yaw - prevYaw[i]; dy = Math.atan2(Math.sin(dy), Math.cos(dy)); prevYaw[i] = yaw; n.roll = lerp(n.roll, clamp(-dy / dt * .4, -.6, .6), .1); });
+}
+const orient = (o, n) => o.rotation.set(-Math.asin(clamp(n.h.y, -1, 1)) * .8, Math.atan2(n.h.x, n.h.z), n.roll);
+
+// ---------- 姿势 ----------
+const B = santa.BASE, LH_WRITE = [1.2, 2.8, 1.2];   // 手臂伸得到的位置
+const POSE = {
+  reins: { ...B, mouth: .3, bob: .05, bobF: 5, rH: [-.5, 1.3, 1.35], lH: [.5, 1.3, 1.35] },
+  hello: { ...B, mouth: .9, bob: .05, bobF: 5, roll: -.1, rH: [-1.4, 3.3, .7], lH: [.5, 1.3, 1.35], rPole: [-1, -1, -.5], wave: 1 },
+  offer: { ...B, mouth: .6, bob: .025, bobF: 3, yaw: .35, eyeX: .9, eyeY: .1, lean: .1, rH: [-.5, 1.35, 1.35], lH: [1.75, 2.35, 1.35], lPole: [1, -1, -.4], lHandRot: [0, 0, .5] },
+  write: { ...B, mouth: .55, bob: 0, bobF: 3, yaw: .25, eyeX: .7, eyeY: .5, lean: .08, rH: [-.5, 1.35, 1.35], lH: LH_WRITE, lPole: [1, -.5, -.6] },
+  bye: { ...B, mouth: .9, bob: .05, bobF: 5, rH: [-1.4, 3.3, .5], lH: [1.15, 2.4, 1.3], rPole: [-1, -1, -.5], lPole: [1, -1, -.4], wave: 1 },
+};
+function poseAt(t) {
+  const k = (a, b) => win(t, a, b);
+  let P = POSE.reins;
+  P = santa.mix(P, POSE.hello, k(1.8, 2.2) * (1 - k(4.3, 4.8)));
+  P = santa.mix(P, POSE.offer, k(T.offer - .2, T.offer + .4));
+  P = santa.mix(P, POSE.write, k(T.grab + .1, T.write0));
+  P = santa.mix(P, POSE.bye, k(T.leave + .2, T.leave + .7));
+  P = { ...P };
+  if (t > T.write1 && t < T.leave + .3) { const w = (t - T.write1) * 9; P.lH = [P.lH[0] + Math.cos(w) * .3, P.lH[1] + Math.sin(w) * .3 + .2, P.lH[2]]; P.mouth = .95; P.bob = .06; P.bobF = 7; } // 写完转一圈仙女棒 + 哈哈笑
+  return P;
+}
+let turnNow = 0, relNow = 0;
+function turnAt(t, dt, sleighYaw, santaWorld) {
+  const toCam = camera.position.clone().sub(santaWorld), camYaw = Math.atan2(toCam.x, toCam.z);
+  relNow = Math.atan2(Math.sin(camYaw - sleighYaw), Math.cos(camYaw - sleighYaw));
+  const w = Math.max(win(t, 1.6, 2.4) * .6 * (1 - win(t, 4.4, 4.9)) + win(t, 3.6, 4.8) * (1 - win(t, T.leave, T.leave + .5)), win(t, T.leave + .5, T.leave + 1.2) * .85);
+  const target = clamp(relNow, -1.9, 1.9) * w;
+  // 平滑转身：最快约 2.2 弧度/秒，起停有缓冲 → 镜头转到身后时，他会经过正前方慢慢转到另一边
+  const step = clamp((target - turnNow) * Math.min(1, dt * 5), -2.2 * dt, 2.2 * dt);
+  turnNow += step; return turnNow;
+}
+
+// 握笔式拿仙女棒：不随前臂转动，始终朝上微倾 → 棒尖 = 手 + 固定偏移
+const WAND_Q = new THREE.Quaternion().setFromEuler(new THREE.Euler(.35, 0, -.42)), WAND_LEN = 1.15 * 1.1;
+// 握法：棒横贴在手套掌心前面，大拇指从外面扣住 —— “大拇指 + 手掌夹住”
+const GRIP_L = V(0, -.17, .2), WAND_GRIP = 1.15, WAND_WS = 1.1 * .92;   // 掌心前的夹持点；棒上被夹住的位置（距棒尖）；棒的世界缩放
+const THUMB_OPEN = { p: [-.25, -.07, .07], r: [-.25, 0, .95] }, THUMB_GRIP = { p: [.03, -.12, .34], r: [-.35, 0, .45], sy: 1.25 };
+let gripSign = 0;
+const wandDir = () => V(0, 1, 0).applyQuaternion(WAND_Q);
+function gripQuat() {   // 手套的世界朝向：掌心朝镜头，棒沿手套左右方向穿过掌心，手套顺着前臂方向伸出
+  const h = santa.armL.hand, hp = wpos(h), D = wandDir(), F = hp.clone().sub(wpos(santa.armL.el)).normalize();
+  const C = camera.position.clone().sub(hp).normalize(), z = C.sub(D.clone().multiplyScalar(C.dot(D))).normalize();
+  const x = D.clone(), y = z.clone().cross(x);
+  if (!gripSign) gripSign = y.dot(F) > 0 ? -1 : 1;
+  if (gripSign < 0) { x.negate(); y.negate(); }
+  return new THREE.Quaternion().setFromRotationMatrix(new THREE.Matrix4().makeBasis(x, y, z));
+}
+const wandOffsetW = () => {   // 手腕 → 棒尖（写字 IK 用：棒尖 = 手腕 + 这个偏移）
+  const hs = santa.armL.hand.getWorldScale(new THREE.Vector3()).x;
+  return GRIP_L.clone().multiplyScalar(hs).applyQuaternion(gripQuat()).addScaledVector(wandDir(), WAND_GRIP * WAND_WS);
+};
+function poseWand() {
+  const h = santa.armL.hand, th = santa.armL.thumb, w = win(t, T.grab - .22, T.grab + .18);
+  // 大拇指：张开 → 扣住
+  th.position.set(...THUMB_OPEN.p.map((v, i) => lerp(v, THUMB_GRIP.p[i], w))); th.rotation.set(...THUMB_OPEN.r.map((v, i) => lerp(v, THUMB_GRIP.r[i], w))); th.scale.set(1, lerp(1, THUMB_GRIP.sy, w), 1);
+  if (w <= 0) { gripSign = 0; return; }
+  h.updateWorldMatrix(true, false);
+  const cur = h.getWorldQuaternion(new THREE.Quaternion()), want = cur.clone().slerp(gripQuat(), w);
+  const pq = h.parent.getWorldQuaternion(new THREE.Quaternion());
+  h.quaternion.copy(pq.invert().multiply(want)); h.updateWorldMatrix(false, true);
+  if (wandState !== 'held') return;
+  const hq = h.getWorldQuaternion(new THREE.Quaternion()), hs = h.getWorldScale(new THREE.Vector3()).x;
+  wand.quaternion.copy(hq.invert().multiply(WAND_Q));
+  const grip = h.localToWorld(GRIP_L.clone()).addScaledVector(wandDir(), WAND_GRIP * WAND_WS);
+  wand.position.copy(h.worldToLocal(grip)); wand.scale.setScalar(WAND_WS / hs);
+  wand.updateWorldMatrix(false, true);
+}
+// ---------- 主循环 ----------
+let reachW = new THREE.Vector3(), uDone = 0, calm = 0, penF = null, t = 0, wandState = 'rest', wandFrom = null, offset = V(), smoothPen = null, cRel = null, inited = false, behind = true, occ = 0;
+let prevSantaPos = null, prevVel = V(), acc = V();
+function setup() {
+  if (S.wand.mode === 'none' || S.wand.mode === 'hand') S.wand.mode = 'rest'; S.wand.alpha = 1;
+  for (const p of site.textPts()) p.on = -1; S.textMorph = 0;
+  initChain(); inited = true;
+}
+// 每次播放前把所有状态归零（支持“再种一棵”后再次播放）
+function resetState() {
+  t = 0; wandState = 'rest'; wandFrom = null; offset.set(0, 0, 0); smoothPen = null; cRel = null; inited = false; behind = true; occ = 0;
+  reachW.set(0, 0, 0); uDone = 0; calm = 0; penF = null; pathE = null; PEN = null; prevSantaPos = null; prevVel.set(0, 0, 0); acc.set(0, 0, 0);
+  turnNow = 0; relNow = 0; prevLead = null; prevYaw = [0, 0, 0]; speed = 0; bellT = 0;
+  if (wand.parent !== scene) scene.add(wand); wand.visible = false; wand.rotation.set(0, 0, 0); wand.scale.setScalar(.85);
+  pLife.fill(9); pCol.fill(0); pGeo.attributes.color.needsUpdate = true;
+  sleigh.visible = false; deer.forEach(d => d.root.visible = false); reins.visible = false;
+  cv3.style.zIndex = 1; window.__occ = 0;
+}
+let bellT = 0;
+function place() {
+  const lat = n => { const y = Math.atan2(n.h.x, n.h.z); return V(Math.cos(y), 0, -Math.sin(y)); };
+  const fast = speed > 1.5 ? 1 : .55;
+  [[nodes[0], 0, 1], [nodes[1], 2, 3]].forEach(([n, a, b]) => {
+    const l = lat(n);
+    for (const [i, s] of [[a, -1], [b, 1]]) {
+      const d = deer[i], ph = (t * fast + i * .4) * 10;
+      d.root.position.copy(n.p).addScaledVector(l, s * 1.05).add(offset); d.root.position.y += -1.0 + Math.sin(ph) * .16;
+      orient(d.root, n); d.root.rotation.x += Math.sin(ph + .8) * .11; d.root.rotation.z += Math.sin(ph * .5 + i) * .04;   // 摇摆木马式的起伏
+      d.gallop(t * fast + i * .4);
+    }
+  });
+  const sway = 1 - .8 * calm;
+  sleigh.position.copy(nodes[2].p).add(offset); sleigh.position.y += (Math.sin(t * 2.3) * .08 + Math.sin(t * 3.7 + 1) * .03) * sway;
+  orient(sleigh, nodes[2]); sleigh.rotation.x += Math.sin(t * 1.9) * .04 * sway; sleigh.rotation.z += Math.sin(t * 1.4) * .045 * sway;
+}
+function step(dt) {
+  if (!inited) setup();
+  t += dt; calm = win(t, T.write0 - .6, T.write0) * (1 - win(t, T.write1, T.write1 + .5));
+  if ((!PEN || PEN.src !== site.textPts()) && site.textPts().length) PEN = buildPen();
+  // 离开时：把写字时的平移量并入路线
+  if (t >= T.leave && !pathE) {
+    for (const n of nodes) n.p.add(offset); prevLead.add(offset);
+    const L = nodes[0].p.clone(); offset.set(0, 0, 0);
+    pathE = curve([[L.x, L.y, L.z], [L.x + 2.5, L.y + 1.8, L.z - 5], [13.5, .5, -19], [8.5, -2, -31], [2.5, -4, -46], [0, -4.6, -62]]);
+  }
+  stepChain(t, dt);
+  place(); scene.updateMatrixWorld(true);
+
+  // 惯性：圣诞老人感受到的加速度 → 身体前后仰、左右倾、帽子绒球胡子甩动
+  const sp = wpos(santa.root); if (!prevSantaPos) prevSantaPos = sp.clone();
+  const vel = sp.clone().sub(prevSantaPos).divideScalar(dt); prevSantaPos.copy(sp);
+  acc.lerp(vel.clone().sub(prevVel).divideScalar(dt), .2); prevVel.copy(vel);
+  const aLocal = acc.clone().applyQuaternion(sleigh.quaternion.clone().invert());
+  santa.root.userData.acc = { x: clamp(aLocal.x * .06, -1.5, 1.5), y: clamp(aLocal.y * .06, -1.5, 1.5), z: clamp(aLocal.z * .06, -1.5, 1.5) };
+
+  const sYaw = Math.atan2(nodes[2].h.x, nodes[2].h.z), P = poseAt(t);
+  P.turn = turnAt(t, dt, sYaw, sp); P.yaw += clamp(relNow - P.turn, -.6, .6) * win(t, T.leave + .5, T.leave + 1.2) * .7;
+  P.lean += clamp(-aLocal.z * .012, -.25, .25); P.tilt = clamp(-nodes[2].roll * .9 - aLocal.x * .01, -.4, .4);
+
+  // 仙女棒：从树旁飞起 → 落进他伸出的左手
+  if (wandState === 'rest' && t >= T.wandFly) {
+    wandState = 'fly'; S.wand.mode = 'none'; scene.add(wand); wand.visible = true; wand.rotation.set(0, 0, 0); wand.scale.setScalar(.85);
+    const wr = site.proj(site.WAND_REST.x, site.WAND_REST.y, site.WAND_REST.z), zN = V(0, 0, -TREE_DEPTH + 3).project(camera).z;
+    wandFrom = fromScreen(wr.x, wr.y, zN);
+  }
+  if (wandState === 'fly') {
+    const k = sm(clamp((t - T.wandFly) / (T.grab - T.wandFly), 0, 1)), hand = wpos(santa.armL.hand).add(wandOffsetW());
+    const mid = wandFrom.clone().lerp(hand, .5).add(V(0, 3, 2));
+    const a = wandFrom.clone().lerp(mid, k), b = mid.clone().lerp(hand, k); wand.position.copy(a.lerp(b, k)); wand.rotation.z = (1 - k) * 8; wand.rotation.y = t * 4;
+    emit(wand.position, 2, .25);
+    if (t >= T.grab) { wandState = 'held'; santa.armL.hand.add(wand); poseWand(); site.sfx('pick'); emit(wpos(wand), 45, .5, [1, .9, .6], 2.2); }
+  }
+  santa.apply(P, t, dt); scene.updateMatrixWorld(true); poseWand();
+
+  // 写字：整组顺着笔迹平滑滑行，手臂 IK 精确跟随笔尖
+  if (wandState === 'held' && PEN) {
+    const wW = win(t, T.grab + .25, T.grab + .75) * (1 - win(t, T.write1 + .35, T.write1 + .6));   // 抓到棒后就开始就位
+    const uClock = clamp((t - T.write0) / (T.write1 - .6 - T.write0), 0, 1), u = Math.min(uClock, uDone + .03), pen0 = penAt(u); // 笔最多领先棒尖一小段
+    if (!penF) penF = { x: pen0.x, y: pen0.y }; { const a = 1 - Math.exp(-dt / .08); penF.x += (pen0.x - penF.x) * a; penF.y += (pen0.y - penF.y) * a; }
+    const pen = penF;
+    if (t >= T.grab + .25 && !cRel) { cRel = wpos(wand).sub(sleigh.position); smoothPen = { x: pen.x, y: pen.y }; }
+    if (cRel && t < T.leave) {
+      // 雪橇跟随：上一帧手伸出“舒服位置”多少，整组就顺着那个方向滑一点，把手带回来
+      offset.addScaledVector(reachW, (1 - Math.exp(-dt / .3)) * wW); offset.z = 0;
+      place(); santa.apply(P, t, 0); scene.updateMatrixWorld(true); poseWand();
+      if (wW > .5) {
+        for (let it = 0; it < 2; it++) {   // 手臂 IK：手 = 笔尖 − 棒长，棒尖就精确落在笔尖上
+          const tip = wpos(wand), handT = atDepth(pen.x, pen.y, tip.z).sub(wandOffsetW());
+          const L = santa.body.worldToLocal(handT), base2 = V(...LH_WRITE), dv = L.sub(base2); dv.x = Math.max(dv.x, -.12); dv.y = Math.max(dv.y, -.7); if (dv.length() > 1.1) dv.setLength(1.1);   // 手不往头那边横穿，够不着的交给雪橇
+          P.lH = [base2.x + dv.x, base2.y + dv.y, base2.z + dv.z]; santa.apply(P, t, 0); scene.updateMatrixWorld(true); poseWand();
+        }
+        { const tip = wpos(wand), err = atDepth(pen.x, pen.y, tip.z).sub(tip);   // 棒尖实际还差多少（够不着的部分交给雪橇）
+          reachW = err.multiplyScalar(1.6).add(santa.body.localToWorld(V(...P.lH)).sub(santa.body.localToWorld(V(...LH_WRITE))).multiplyScalar(.5)); }
+      }
+      const tipS = toScreen(wpos(wand));
+      if (wW > .5) {
+        const PP = PEN.P, tol = site.textFront().size * .22; let k0 = 0, k1 = 0;
+        while (k0 < PP.length - 1 && PP[k0].t < uDone) k0++; k1 = k0; while (k1 < PP.length - 1 && PP[k1].t <= u) k1++;
+        let bk = -1, bd = tol; for (let k = k0; k <= k1; k++) { const d = Math.hypot(PP[k].x - tipS.x, PP[k].y - tipS.y); if (d < bd) { bd = d; bk = k; } }
+        if (bk >= 0) { if (PP[bk].t - uDone > .02) site.sfx('twinkle'); uDone = Math.max(uDone, PP[bk].t); }
+        if (Math.hypot(tipS.x - pen0.x, tipS.y - pen0.y) < tol * .7) uDone = Math.max(uDone, u);   // 棒尖已追上笔尖（含两笔之间的抬笔平移）
+        for (const p of site.textPts()) if (p.on < 0 && p.rt <= uDone) { p.on = .3; p.sx = tipS.x; p.sy = tipS.y; }
+      }
+      emit(wpos(wand), wW > .3 ? 3 : 1, .12, [1, .85, .45], .45);
+    }
+    if (t > T.write1 + .55) for (const p of site.textPts()) if (p.on < 0) { p.on = .3; p.sx = p.fx; p.sy = p.fy; }
+  }
+  if (wandState === 'held' && t >= T.leave) emit(wpos(wand), 1, .12);
+  S.textMorph = win(t, T.leave + .5, T.leave + 3.5);
+
+  // 前后层：雪橇比树远时画在树后面，并让树身变实挡住他
+  const depth = -sleigh.position.z; if (behind && depth < TREE_DEPTH - 1) behind = false; else if (!behind && depth > TREE_DEPTH + 1) behind = true;
+  cv3.style.zIndex = behind ? 1 : 3;
+  occ = lerp(occ, behind && t < T.end + .3 ? .93 : 0, 1 - Math.exp(-dt * 5)); window.__occ = occ;
+  const visible = t < T.end + .2; sleigh.visible = visible; deer.forEach(d => d.root.visible = visible); reins.visible = visible;
+
+  const rp = reinGeo.attributes.position, front = sleigh.localToWorld(V(0, 1.1, 2.35));
+  deer.forEach((d, i) => { const h = d.root.localToWorld(V(0, 1.65, .55)); rp.setXYZ(i * 2, front.x, front.y, front.z); rp.setXYZ(i * 2 + 1, h.x, h.y, h.z); }); rp.needsUpdate = true;
+  if (speed > 2 && visible) { for (const s of [-1, 1]) emit(sleigh.localToWorld(V(s * 1.05, -.6, -2.0)), 2, .25, [1, .8, .45], .3); deer.forEach(d => Math.random() < .5 && emit(d.root.localToWorld(V(0, .2, -.6)), 1, .3, [1, .9, .7], .3)); }
+  updateParticles(dt);
+  bellT -= dt; if (speed > 2 && visible && bellT <= 0) { bellT = .14; site.sfx('bell'); }
+  if (!window.__noRender) renderer.render(scene, camera);
+}
+
+// ---------- 实时播放 + 对外接口 ----------
+let running = false, last = 0, onDone = null, doneFired = false;
+function loop(now) {
+  if (!running) return;
+  const dt = Math.min(.05, Math.max(.001, (now - last) / 1000)); last = now;
+  step(dt);
+  if (t > T.end + .4 && !doneFired) { doneFired = true; const cb = onDone; stop(); if (cb) cb(); return; }
+  requestAnimationFrame(loop);
+}
+function stop() { running = false; window.__occ = 0; renderer.clear(); cv3.style.zIndex = 3; }
+// 预先编译着色器，避免第一次出场时卡一下
+setTimeout(() => { try { sleigh.visible = true; deer.forEach(d => d.root.visible = true); wand.visible = true; renderer.compile(scene, camera); } catch (e) {} resetState(); renderer.clear(); }, 300);
+window.__santa3d = {
+  ready: true,
+  start(cb) { resetState(); onDone = cb; doneFired = false; running = true; last = performance.now(); requestAnimationFrame(loop); },
+  reset() { stop(); resetState(); renderer.clear(); },
+};
+
+</script>
+</body>
+</html>
