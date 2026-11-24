@@ -788,7 +788,7 @@ function update(dt){
     if(INP.pointDown)S.holdPoint+=dt;else S.holdPoint=Math.max(0,S.holdPoint-dt*2);
     setRing(S.holdPoint/.6);
     const cam=S.camOn;
-    setHint(cam?'☝️':'🎨',cam?'食指朝上，往左或往右划一下再收回 = 换一个颜色':'点击上方，选择树的颜色',cam?'选好后把食指朝下停一下，召唤仙女棒':'选好后点右边按钮召唤仙女棒','召唤仙女棒 ✨',summonWand);
+    setHint(cam?'☝️':'🎨',cam?'食指朝上，往左或往右划一下再收回 = 换一个颜色':'点击上方，选择树的颜色',cam?'选好后把食指朝下停一下，召唤仙女棒':'选好后点按钮召唤仙女棒','召唤仙女棒 ✨',summonWand);
     if(S.holdPoint>=.6){S.holdPoint=0;setRing(0);summonWand()}
   }
   else if(st==='spiral'){
