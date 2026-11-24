@@ -53,6 +53,8 @@ button{font:inherit;color:inherit;cursor:pointer}
 #hintBtn{flex:none;border:1px solid var(--gold);background:rgba(255,215,122,.14);color:var(--gold2);border-radius:99px;padding:8px 14px;font-size:13px;white-space:nowrap}
 #hintBtn:hover{background:rgba(255,215,122,.28)}
 #hintBtn[hidden]{display:none}
+#hint>div:nth-child(2){flex:1;min-width:0}
+@media (max-width:520px){#hint{width:94vw;flex-wrap:wrap;gap:8px 12px;padding:10px 14px;bottom:12px}#hintIcon{width:42px;height:42px;font-size:22px}#hintTitle{font-size:15px}#hintBtn{width:100%;padding:10px 14px;font-size:14px}}
 
 /* 步骤 */
 #steps{position:fixed;left:16px;top:50%;transform:translateY(-50%);display:flex;flex-direction:column;gap:6px;z-index:4}
